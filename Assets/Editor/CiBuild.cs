@@ -15,12 +15,17 @@ namespace ProjectBootstrap
         // Vulkan comes first because that is what the ARCore release notes require; GLES3 stays as
         // the fallback for devices that have no Vulkan driver.
         //
-        // Stripping is OFF, engine code included. The official 1.0.0 build leaves it at Unity's
-        // default and its libil2cpp.so is 85 MB; ours came out at 42 MB with Low stripping and every
-        // camera view drew black while the AR session still reported tracking. AR Foundation and
-        // ARCore resolve subsystems, providers and shaders through reflection and generic
-        // instantiation, none of which the stripper can see, so the safe setting for this project is
-        // no stripping at all.
+        // The size fingerprint is what matters here. The official 1.0.0 build ships a 85-87 MB
+        // libil2cpp.so; ours came out at 49 MB even with stripping disabled, and every camera view
+        // drew black while ARCore still reported tracking. The gap was not stripping: it is IL2CPP
+        // code generation. OptimizeSize (Unity's non-default "smallest" mode) shares generic code
+        // aggressively, and AR Foundation resolves its subsystem providers, delegate targets and
+        // shader material through generic instantiation and reflection, which that mode can fold
+        // away. OptimizeSpeed is Unity's default and what the official build uses, so matching it is
+        // both the fix and the explanation for the size difference.
+        //
+        // Stripping stays off on top of that, for margin: the project has no link.xml, and engine
+        // code is left alone too, so nothing ARCore reaches for can be cut.
         public static void Configure()
         {
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);
@@ -28,7 +33,7 @@ namespace ProjectBootstrap
                 new[] { GraphicsDeviceType.Vulkan, GraphicsDeviceType.OpenGLES3 });
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.Android, ManagedStrippingLevel.Disabled);
-            PlayerSettings.SetIl2CppCodeGeneration(NamedBuildTarget.Android, Il2CppCodeGeneration.OptimizeSize);
+            PlayerSettings.SetIl2CppCodeGeneration(NamedBuildTarget.Android, Il2CppCodeGeneration.OptimizeSpeed);
             PlayerSettings.stripEngineCode = false;
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
             // Higher than the official 1.0.0 build (10000) so this installs over it instead of failing
@@ -38,6 +43,7 @@ namespace ProjectBootstrap
             AssetDatabase.SaveAssets();
             Debug.Log($"[CiBuild] configured backend={PlayerSettings.GetScriptingBackend(NamedBuildTarget.Android)} " +
                       $"arch={PlayerSettings.Android.targetArchitectures} strip={PlayerSettings.GetManagedStrippingLevel(NamedBuildTarget.Android)} " +
+                      $"codegen={PlayerSettings.GetIl2CppCodeGeneration(NamedBuildTarget.Android)} " +
                       $"apis={string.Join(",", PlayerSettings.GetGraphicsAPIs(BuildTarget.Android))}");
         }
 
