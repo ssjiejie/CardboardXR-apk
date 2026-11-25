@@ -64,6 +64,8 @@ namespace CardboardXR.Stereo
         Vector2 m_FrustumCenter;
         Vector2 m_FrustumSize;
         bool m_HasImage;
+        // Said once, because a missing background shader repeats every frame.
+        bool m_WarnedNoMaterial;
         float? m_FocusDistance;
         float m_ShownDistance;
 
@@ -173,7 +175,20 @@ namespace CardboardXR.Stereo
         void OnCameraFrame(ARCameraFrameEventArgs args)
         {
             var source = m_CameraManager.cameraMaterial;
-            if (source == null || args.textures == null || args.textures.Count == 0 ||
+            if (source == null)
+            {
+                // ARCore builds this material from Unlit/ARCoreBackground, which only ships when
+                // something references it at build time. Its absence is silent otherwise: frames keep
+                // arriving and the screen stays black.
+                if (!m_WarnedNoMaterial)
+                {
+                    m_WarnedNoMaterial = true;
+                    Debug.LogError("[Passthrough] ARCore has no camera material: Unlit/ARCoreBackground " +
+                                   "is missing from this build, so the camera image cannot be drawn.");
+                }
+                return;
+            }
+            if (args.textures == null || args.textures.Count == 0 ||
                 !args.displayMatrix.HasValue || !args.projectionMatrix.HasValue)
                 return;
             // Always the whole camera image, in both views. Mono once cropped it to ARCore's
