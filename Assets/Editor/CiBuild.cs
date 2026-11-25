@@ -13,18 +13,28 @@ namespace ProjectBootstrap
     {
         // ARCore needs arm64, which only the IL2CPP backend produces, so Mono is not an option.
         // Vulkan comes first because that is what the ARCore release notes require; GLES3 stays as
-        // the fallback for devices that have no Vulkan driver. Managed stripping stays Low: AR
-        // Foundation resolves several types by reflection, and High was silently dropping some.
+        // the fallback for devices that have no Vulkan driver.
+        //
+        // Stripping is OFF, engine code included. The official 1.0.0 build leaves it at Unity's
+        // default and its libil2cpp.so is 85 MB; ours came out at 42 MB with Low stripping and every
+        // camera view drew black while the AR session still reported tracking. AR Foundation and
+        // ARCore resolve subsystems, providers and shaders through reflection and generic
+        // instantiation, none of which the stripper can see, so the safe setting for this project is
+        // no stripping at all.
         public static void Configure()
         {
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android,
                 new[] { GraphicsDeviceType.Vulkan, GraphicsDeviceType.OpenGLES3 });
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
-            PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.Android, ManagedStrippingLevel.Low);
+            PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.Android, ManagedStrippingLevel.Disabled);
             PlayerSettings.SetIl2CppCodeGeneration(NamedBuildTarget.Android, Il2CppCodeGeneration.OptimizeSize);
-            PlayerSettings.stripEngineCode = true;
+            PlayerSettings.stripEngineCode = false;
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+            // Higher than the official 1.0.0 build (10000) so this installs over it instead of failing
+            // with "app not installed".
+            PlayerSettings.Android.bundleVersionCode = 10001;
+            PlayerSettings.bundleVersion = "1.0.1";
             AssetDatabase.SaveAssets();
             Debug.Log($"[CiBuild] configured backend={PlayerSettings.GetScriptingBackend(NamedBuildTarget.Android)} " +
                       $"arch={PlayerSettings.Android.targetArchitectures} strip={PlayerSettings.GetManagedStrippingLevel(NamedBuildTarget.Android)} " +
@@ -127,6 +137,11 @@ namespace ProjectBootstrap
 
         public static void BuildApk()
         {
+            // Resources assets are always packed, and these materials reference the two ARCore
+            // background shaders, so the shaders come with them. That is what makes
+            // Shader.Find("Unlit/ARCoreBackground") work in the player; without it the camera
+            // material is null and every camera view is black.
+            ArBackgroundMaterials.Ensure();
             EnsureArBackgroundShaders();
             Debug.Log($"[CiBuild] building backend={PlayerSettings.GetScriptingBackend(NamedBuildTarget.Android)} " +
                       $"arch={PlayerSettings.Android.targetArchitectures}");
