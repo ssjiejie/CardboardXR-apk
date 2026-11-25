@@ -177,6 +177,15 @@ namespace CardboardXR.Stereo
             var source = m_CameraManager.cameraMaterial;
             if (source == null)
             {
+                // ARCore's own material comes from Shader.Find("Unlit/ARCoreBackground"), which only
+                // works when the shader made it into the build. A custom material on
+                // ARCameraBackground is the documented fallback, so use it when it is set.
+                var background = m_CameraManager.GetComponent<ARCameraBackground>();
+                if (background != null)
+                    source = background.material;
+            }
+            if (source == null)
+            {
                 // ARCore builds this material from Unlit/ARCoreBackground, which only ships when
                 // something references it at build time. Its absence is silent otherwise: frames keep
                 // arriving and the screen stays black.
