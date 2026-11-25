@@ -9,6 +9,7 @@ namespace ProjectBootstrap
     class VideoSetup : DemoSetup
     {
         const string ChromaKeyShaderName = "CardboardXR/ChromaKey";
+        const string ChromaKeyShaderPath = "Assets/_Project/Demos/Video/Shaders/ChromaKey.shader";
 
         public override string Name => "Video";
         public override int Order => 20;
@@ -34,9 +35,17 @@ namespace ProjectBootstrap
             var material = StereoBuilder.CreateMaterial("Video Sphere", DemoAssets.Unlit, Color.white, null, 1f, folder);
             // The green-screen cut, drawn over the passthrough image (see ChromaKey.shader). Falls back
             // to the opaque material, so a missing shader costs the feature rather than the build.
-            var chromaShader = Shader.Find(ChromaKeyShaderName);
+            // Shader.Find only searches shaders already loaded into memory, and a shader nothing
+            // references is never loaded: it returned null here, the material silently fell back to
+            // the opaque one, and the shader was then stripped from the build. Loading the asset
+            // directly is what gets a reference into the scene, and so into the APK.
+            var chromaShader = AssetDatabase.LoadAssetAtPath<Shader>(ChromaKeyShaderPath);
             if (chromaShader == null)
-                Debug.LogWarning($"[Build] {ChromaKeyShaderName} not found: the video sphere will have no green-screen cut");
+                chromaShader = Shader.Find(ChromaKeyShaderName);
+            if (chromaShader == null)
+                Debug.LogError($"[Build] {ChromaKeyShaderName} not found at {ChromaKeyShaderPath}: the video sphere will have no green-screen cut");
+            else
+                Debug.Log($"[Build] Chroma-key shader ready: {chromaShader.name}");
             var chroma = chromaShader != null
                 ? StereoBuilder.CreateMaterial("Video Sphere Chroma", chromaShader, Color.white, null, 1f, folder)
                 : material;
