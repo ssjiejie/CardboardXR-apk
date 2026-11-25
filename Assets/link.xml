@@ -1,0 +1,11 @@
+<linker>
+  <!-- XR Plug-in Management 的启动钩子是 [RuntimeInitializeOnLoadMethod]，剥离器看不见调用方，
+       被剥掉后 XR 完全不会初始化，而且不报任何错（表现就是 XR loader: none）。
+       这里整程序集保留，作为 stripping 之外的第二道保险。 -->
+  <assembly fullname="Unity.XR.Management" preserve="all" />
+  <assembly fullname="UnityEngine.XR.ManagementModule" preserve="all" />
+  <assembly fullname="Unity.XR.ARFoundation" preserve="all" />
+  <assembly fullname="Unity.XR.ARCore" preserve="all" />
+  <assembly fullname="Unity.XR.CoreUtils" preserve="all" />
+  <assembly fullname="UnityEngine.XR.ARSubsystems" preserve="all" />
+</linker>
