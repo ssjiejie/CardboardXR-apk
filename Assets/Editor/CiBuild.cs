@@ -1,8 +1,11 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Build;
+using UnityEditor.XR.Management;
+using UnityEditor.XR.Management.Metadata;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.XR.Management;
 
 namespace ProjectBootstrap
 {
@@ -13,28 +16,12 @@ namespace ProjectBootstrap
     {
         // ARCore needs arm64, which only the IL2CPP backend produces, so Mono is not an option.
         //
-        // OpenGLES3 only, deliberately. The 32-bit Mono build of this same project had a working
-        // picture and used GLES3 alone; the 64-bit builds that came out all-black were the ones
-        // listing Vulkan first. Video is the tell: the video player, the AR camera texture and the
-        // passthrough quad all draw black, and none of them share code with each other -- they share
-        // the graphics API. On this device Vulkan comes up but hands back no usable surface for
-        // external/OES textures, so everything that samples a camera or a video frame renders black
-        // while the rest of the 3D scene still draws. GLES3 is what the official 1.0.0 build ships
-        // and what every Android video/AR path here is proven against.
+        // OpenGLES3 only, deliberately: the 32-bit Mono build of this project had a working picture
+        // on GLES3 alone, the official 1.0.0 ships GLES3 only, and the all-black builds were the ones
+        // that listed Vulkan first.
         //
-        // Code generation stays OptimizeSize. OptimizeSpeed was tried and the IL2CPP link step ran
-        // the runner out of disk (libil2cpp.dbg.so is tens of GB of intermediate), so it is not an
-        // option on this CI. It is also not needed: the black frame is a graphics-API problem, not a
-        // missing-generic problem -- video playback takes no generics at all and it was black too.
-        //
-        // The size fingerprint is what matters here. The official 1.0.0 build ships a 85-87 MB
-        // libil2cpp.so; ours came out at 49 MB even with stripping disabled, and every camera view
-        // drew black while ARCore still reported tracking. The gap was not stripping: it is IL2CPP
-        // code generation. OptimizeSize (Unity's non-default "smallest" mode) shares generic code
-        // aggressively, and AR Foundation resolves its subsystem providers, delegate targets and
-        // shader material through generic instantiation and reflection, which that mode can fold
-        // away. OptimizeSpeed is Unity's default and what the official build uses, so matching it is
-        // both the fix and the explanation for the size difference.
+        // Code generation stays OptimizeSize: OptimizeSpeed makes the IL2CPP link step write tens of
+        // GB of debug symbols and the CI runner runs out of disk.
         //
         // Stripping stays off on top of that, for margin: the project has no link.xml, and engine
         // code is left alone too, so nothing ARCore reaches for can be cut.
@@ -52,11 +39,76 @@ namespace ProjectBootstrap
             // with "app not installed".
             PlayerSettings.Android.bundleVersionCode = 10001;
             PlayerSettings.bundleVersion = "1.0.1";
+            EnsureXrRuntimeSettings();
             AssetDatabase.SaveAssets();
             Debug.Log($"[CiBuild] configured backend={PlayerSettings.GetScriptingBackend(NamedBuildTarget.Android)} " +
                       $"arch={PlayerSettings.Android.targetArchitectures} strip={PlayerSettings.GetManagedStrippingLevel(NamedBuildTarget.Android)} " +
                       $"codegen={PlayerSettings.GetIl2CppCodeGeneration(NamedBuildTarget.Android)} " +
                       $"apis={string.Join(",", PlayerSettings.GetGraphicsAPIs(BuildTarget.Android))}");
+        }
+
+        // XR Plug-in Management only starts if an XRGeneralSettings instance exists in the player.
+        // Its static s_Instance is assigned in Awake, and Awake only runs for objects listed in
+        // PlayerSettings.preloadedAssets. When that list is missing the entry, both runtime hooks
+        // (AttemptInitializeXRSDKOnLoad, AttemptStartXRSDKOnBeforeSplashScreen) return on their first
+        // line -- no loader, no session, no camera subsystem, and no error anywhere, because nothing
+        // runs. On screen that reads exactly as "XR loader: none".
+        //
+        // This writes the Android XRGeneralSettings into preloadedAssets through the API (so the
+        // serialized reference is one Unity produced itself), makes sure ARCore's loader is attached,
+        // and logs the counts -- the build log then proves it instead of assuming it.
+        static void EnsureXrRuntimeSettings()
+        {
+            if (!EditorBuildSettings.TryGetConfigObject(XRGeneralSettings.settingsKey,
+                    out XRGeneralSettingsPerBuildTarget perTarget) || perTarget == null)
+            {
+                Debug.LogError("[CiBuild] XR settings asset missing: no loader can ever start");
+                return;
+            }
+
+            var settings = perTarget.SettingsForBuildTarget(BuildTargetGroup.Android);
+            Debug.Log($"[CiBuild] XR Android settings: {(settings == null ? "NULL" : settings.name)}");
+            if (settings == null)
+            {
+                settings = ScriptableObject.CreateInstance<XRGeneralSettings>();
+                settings.name = "Android Settings";
+                AssetDatabase.AddObjectToAsset(settings, perTarget);
+                perTarget.SetSettingsForBuildTarget(BuildTargetGroup.Android, settings);
+                EditorUtility.SetDirty(perTarget);
+            }
+
+            if (settings.Manager == null)
+            {
+                var manager = ScriptableObject.CreateInstance<XRManagerSettings>();
+                manager.name = "Android Providers";
+                AssetDatabase.AddObjectToAsset(manager, perTarget);
+                settings.Manager = manager;
+            }
+
+            settings.InitManagerOnStart = true;
+            EditorUtility.SetDirty(settings);
+            EditorUtility.SetDirty(settings.Manager);
+
+            var assigned = XRPackageMetadataStore.AssignLoader(settings.Manager,
+                "UnityEngine.XR.ARCore.ARCoreLoader", BuildTargetGroup.Android);
+            Debug.Log($"[CiBuild] ARCore loader assigned={assigned} loaders={settings.Manager.activeLoaders.Count}");
+
+            var preloaded = new List<UnityEngine.Object>(PlayerSettings.GetPreloadedAssets());
+            if (!preloaded.Contains(settings))
+            {
+                preloaded.Add(settings);
+                PlayerSettings.SetPreloadedAssets(preloaded.ToArray());
+                Debug.Log("[CiBuild] added XR settings to preloaded assets");
+            }
+
+            var after = PlayerSettings.GetPreloadedAssets();
+            var contains = false;
+            foreach (var asset in after)
+                if (asset == settings) contains = true;
+            Debug.Log($"[CiBuild] preloaded assets={after.Length} containsXrSettings={contains} " +
+                      $"initOnStart={settings.InitManagerOnStart}");
+
+            AssetDatabase.SaveAssets();
         }
 
         // Fallback for this machine: its 8 GB cap kills the IL2CPP linker, so the shippable APK is a
