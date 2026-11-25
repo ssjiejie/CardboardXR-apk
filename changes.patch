@@ -1,0 +1,400 @@
+--- a/Assets/_Project/Demos/Video/Scripts/VideoSphere.cs
++++ b/Assets/_Project/Demos/Video/Scripts/VideoSphere.cs
+@@ -10,6 +10,10 @@
+     // of the frame. It stays centered on the head, turning with nothing, so moving the phone never
+     // shows the video as a ball around you: only turning looks around. While a video shows, the
+     // whole sphere is clickable (Clicked), for toggling the controls with a tap anywhere.
++    //
++    // Two materials: the ordinary opaque one, and the chroma-key one that cuts a green screen out so
++    // PassthroughController's camera image shows through where the video was green. SetChromaKey
++    // picks between them, so the subject of a green-screen video stands in the room.
+     public class VideoSphere : MonoBehaviour
+     {
+         const int k_Rings = 48;
+@@ -17,19 +21,28 @@
+ 
+         [Tooltip("An unlit material whose main texture the video is drawn into. Copied for each eye.")]
+         [SerializeField] Material m_Material;
++        [Tooltip("The green-screen material (CardboardXR/ChromaKey): the same video with its keyed " +
++                 "colour cut out. Copied for each eye. Falls back to m_Material if unset.")]
++        [SerializeField] Material m_ChromaMaterial;
+         [Tooltip("Meters. Beyond anything else drawn in the demo, such as its panels, and within the gaze's reach " +
+                  "(GazePointer's max distance, 20 m) so a tap on it registers.")]
+         [SerializeField] float m_Radius = 15f;
+ 
+         readonly MeshRenderer[] m_Eyes = new MeshRenderer[2];
+-        readonly Material[] m_Materials = new Material[2];
++        // Two copies per eye: the opaque video, and the green-screen cut. Only one is on a renderer
++        // at a time, but both hold the current texture, so switching costs nothing.
++        readonly Material[] m_Opaque = new Material[2];
++        readonly Material[] m_Chroma = new Material[2];
+         Mesh m_Full;
+         Mesh m_Half;
+         GameObject m_ClickSurface;
++        bool m_ChromaKey;
+ 
+         // A tap or pinch with the gaze on the video, rather than on a panel.
+         public event Action Clicked;
+ 
++        public bool ChromaKey => m_ChromaKey;
++
+         void Awake()
+         {
+             m_Full = BuildMesh(Projection.Full360, m_Radius);
+@@ -42,8 +55,11 @@
+                 m_Eyes[eye] = eyeObject.AddComponent<MeshRenderer>();
+                 m_Eyes[eye].shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                 m_Eyes[eye].receiveShadows = false;
+-                m_Materials[eye] = new Material(m_Material) { name = $"Video {eyeObject.name}" };
+-                m_Eyes[eye].sharedMaterial = m_Materials[eye];
++                m_Opaque[eye] = new Material(m_Material) { name = $"Video {eyeObject.name}" };
++                m_Chroma[eye] = new Material(m_ChromaMaterial != null ? m_ChromaMaterial : m_Material)
++                {
++                    name = $"Video Chroma {eyeObject.name}",
++                };
+                 eyeObject.SetActive(false);
+             }
+ 
+@@ -54,11 +70,15 @@
+             m_ClickSurface.AddComponent<MeshCollider>().sharedMesh = m_Full;
+             m_ClickSurface.AddComponent<ClickRelay>().Clicked += () => Clicked?.Invoke();
+             m_ClickSurface.SetActive(false);
++
++            ApplyMode();
+         }
+ 
+         void OnDestroy()
+         {
+-            foreach (var material in m_Materials)
++            foreach (var material in m_Opaque)
++                Destroy(material);
++            foreach (var material in m_Chroma)
+                 Destroy(material);
+             Destroy(m_Full);
+             Destroy(m_Half);
+@@ -71,6 +91,35 @@
+                 transform.SetPositionAndRotation(core.Head.position, Quaternion.identity);
+         }
+ 
++        // Cuts the green screen out (on) or shows the video as it is (off).
++        public void SetChromaKey(bool on)
++        {
++            if (m_ChromaKey == on)
++                return;
++            m_ChromaKey = on;
++            ApplyMode();
++        }
++
++        // How green a pixel must be before it is cut, and how far the edge is feathered. See the
++        // shader; the defaults suit a normally lit green wall.
++        public void SetChromaKeyThreshold(float threshold, float softness)
++        {
++            foreach (var material in m_Chroma)
++            {
++                if (material.HasProperty("_Threshold"))
++                    material.SetFloat("_Threshold", threshold);
++                if (material.HasProperty("_Softness"))
++                    material.SetFloat("_Softness", softness);
++            }
++        }
++
++        void ApplyMode()
++        {
++            var source = m_ChromaKey ? m_Chroma : m_Opaque;
++            for (var eye = 0; eye < 2; eye++)
++                m_Eyes[eye].sharedMaterial = source[eye];
++        }
++
+         // Shows the texture in the format, or hides the sphere for null.
+         public void Show(Texture texture, VideoFormat format)
+         {
+@@ -86,12 +135,18 @@
+                     : eye == 0 ? Stereo.StereoRig.LeftEyeOnlyLayer : Stereo.StereoRig.RightEyeOnlyLayer;
+                 m_Eyes[eye].GetComponent<MeshFilter>().sharedMesh = format.Projection == Projection.Full360 ? m_Full : m_Half;
+                 var rect = format.EyeRect(eye);
+-                m_Materials[eye].mainTexture = texture;
+-                m_Materials[eye].mainTextureScale = rect.size;
+-                m_Materials[eye].mainTextureOffset = rect.position;
++                SetTexture(m_Opaque[eye], texture, rect);
++                SetTexture(m_Chroma[eye], texture, rect);
+             }
+         }
+ 
++        static void SetTexture(Material material, Texture texture, Rect rect)
++        {
++            material.mainTexture = texture;
++            material.mainTextureScale = rect.size;
++            material.mainTextureOffset = rect.position;
++        }
++
+         // The texture coordinate for a direction given as longitude (0 ahead, positive to the right)
+         // and latitude (positive up), in radians. Equirectangular: across is longitude and up is
+         // latitude, with straight ahead in the middle of the frame. A 180 video spans only the
+--- a/Assets/_Project/Demos/Video/Scripts/VideoDemo.cs
++++ b/Assets/_Project/Demos/Video/Scripts/VideoDemo.cs
+@@ -14,9 +14,11 @@
+     // say it), and the library (the lobby is on the settings panel). Pinch on the video again to
+     // put them away. They stay where they appeared rather than following the head, so they can be
+     // looked at.
+-    // The demo runs in 3DoF with the AR session and hand tracking off; PinchInput's light pinch
+-    // detector runs, slowing down with no hand in view, leaving most of the heat to the video
+-    // decoder. Logs [Video].
++    // The demo runs in 6DoF with passthrough on, so a green-screen video's subject stands in the
++    // room: the green is cut out of the sphere and the camera image shows through (see
++    // VideoSphere and PassthroughController). The controls have a button for each, since ARCore and
++    // the video decoder together are the app's heaviest combination and turning passthrough off
++    // frees the camera and the room scan. Logs [Video].
+     [RequireComponent(typeof(VideoPlayer))]
+     public class VideoDemo : Demo
+     {
+@@ -57,10 +59,19 @@
+         M3Button m_PreviousPage;
+         M3Button m_NextPage;
+         TMP_Text m_EmptyMessage;
++        M3Button m_PassthroughButton;
++        M3Button m_ChromaButton;
++        M3Button m_StereoEyesButton;
+         readonly List<(M3Button item, TMP_Text supporting)> m_EntryButtons = new();
+         int m_Page;
+         bool m_ShowingLibrary;
+         bool m_ControlsShown;
++        // Whether the green screen is cut out. Follows passthrough on entering (with it off the cut
++        // would show black), then the user's own choice through the button.
++        bool m_ChromaKey = true;
++        // Eyes apart while passthrough is on, so a 3D video keeps its depth (see
++        // PassthroughController.StereoEyes). On by default here: the video is the whole point.
++        bool m_StereoEyes = true;
+ 
+         public override void OnDemoEnter(CoreServices core)
+         {
+@@ -77,6 +88,13 @@
+             m_Player.frameDropped += OnFrameDropped;
+             m_Sphere.Clicked += OnVideoClicked;
+ 
++            if (m_Core.Passthrough != null)
++            {
++                m_ChromaKey = m_Core.Passthrough.IsOn;
++                m_Core.Passthrough.StereoEyes = m_StereoEyes;
++            }
++            m_Sphere.SetChromaKey(m_ChromaKey);
++
+             BuildPanel();
+             Refresh();
+             ShowLibrary();
+@@ -84,6 +102,10 @@
+ 
+         public override void OnDemoExit(CoreServices core)
+         {
++            // The other demos draw things at real depths, which double against the flat camera image:
++            // back to eyes together before they take over.
++            if (core.Passthrough != null)
++                core.Passthrough.StereoEyes = false;
+             if (m_Download != null)
+                 StopCoroutine(m_Download);
+             m_Player.prepareCompleted -= OnPrepared;
+@@ -229,6 +251,40 @@
+             Debug.Log($"[Video] Format of {entry.Title} set to {entry.Format}");
+         }
+ 
++        // Passthrough and the green screen belong together: seeing the room through the video needs
++        // the green gone, and the green gone needs passthrough to have something to show behind it.
++        // The button moves both, so neither is left in a state that only shows black; the green
++        // screen can still be turned off on its own, for a video with no green in it.
++        void TogglePassthrough()
++        {
++            if (m_Core.Passthrough == null)
++                return;
++            var on = !m_Core.Passthrough.IsOn;
++            m_Core.Passthrough.Choose(on);
++            SetChromaKey(on);
++            Debug.Log($"[Video] Passthrough {(on ? "on" : "off")}");
++        }
++
++        void ToggleChromaKey() => SetChromaKey(!m_ChromaKey);
++
++        // Apart: the picture is drawn twice with the viewer's eye separation, so a 3D video keeps its
++        // depth and the room sits at one distance like a window. Together: one flat window, no
++        // parallax, which is calmer against anything virtual at another depth.
++        void ToggleStereoEyes()
++        {
++            m_StereoEyes = !m_StereoEyes;
++            if (m_Core.Passthrough != null)
++                m_Core.Passthrough.StereoEyes = m_StereoEyes;
++            Debug.Log($"[Video] Eyes {(m_StereoEyes ? "apart: the view has parallax" : "together: one flat window")}");
++        }
++
++        void SetChromaKey(bool on)
++        {
++            m_ChromaKey = on;
++            m_Sphere.SetChromaKey(on);
++            Debug.Log($"[Video] Green screen removal {(on ? "on" : "off")}");
++        }
++
+         void ReleaseTexture()
+         {
+             if (m_Texture == null)
+@@ -300,6 +356,14 @@
+             m_Play.Icon = ready && m_Player.isPlaying ? "pause" : "play_arrow";
+             m_Time.text = ready ? $"{Clock(m_Player.time)} / {Clock(m_Player.length)}" : "";
+             m_Seek.Value = ready && m_Player.length > 0 ? (float)(m_Player.time / m_Player.length) : 0f;
++            // Only when it changes: the buttons rebuild their colours on a set.
++            var passthrough = m_Core.Passthrough != null && m_Core.Passthrough.IsOn;
++            if (m_PassthroughButton.Selected != passthrough)
++                m_PassthroughButton.Selected = passthrough;
++            if (m_ChromaButton.Selected != m_ChromaKey)
++                m_ChromaButton.Selected = m_ChromaKey;
++            if (m_StereoEyesButton.Selected != m_StereoEyes)
++                m_StereoEyesButton.Selected = m_StereoEyes;
+         }
+ 
+         void UpdateLibraryLabels()
+@@ -328,7 +392,7 @@
+ 
+         // Both pages share one Material panel, k_PanelDistance away, sized to the page showing. Sizes in dp.
+         static readonly Vector2 k_LibrarySize = new(600f, 536f);
+-        static readonly Vector2 k_ControlsSize = new(600f, 352f);
++        static readonly Vector2 k_ControlsSize = new(600f, 440f);
+ 
+         void BuildPanel()
+         {
+@@ -364,31 +428,40 @@
+ 
+             // The controls: what's playing, a seek slider, transport, then the rest.
+             m_ControlsPage = WorldUi.CreateGroup("Controls", m_Panel);
+-            m_Title = M3.Text("Title", m_ControlsPage, "", M3Theme.Type.TitleMedium, new Vector2(0f, 140f), new Vector2(552f, 24f));
++            m_Title = M3.Text("Title", m_ControlsPage, "", M3Theme.Type.TitleMedium, new Vector2(0f, 184f), new Vector2(552f, 24f));
+             m_Title.textWrappingMode = TextWrappingModes.NoWrap;
+-            m_FormatLine = M3.Text("Format", m_ControlsPage, "", M3Theme.Type.BodyMedium, new Vector2(0f, 116f), new Vector2(552f, 20f),
++            m_FormatLine = M3.Text("Format", m_ControlsPage, "", M3Theme.Type.BodyMedium, new Vector2(0f, 160f), new Vector2(552f, 20f),
+                 M3Theme.OnSurfaceVariant);
+-            m_Seek = M3.Slider("Seek", m_ControlsPage, new Vector2(0f, 76f), 552f);
++            m_Seek = M3.Slider("Seek", m_ControlsPage, new Vector2(0f, 120f), 552f);
+             m_Seek.Clicked += fraction =>
+             {
+                 if (m_Current >= 0 && m_Player.isPrepared)
+                     SeekTo(fraction * m_Player.length);
+             };
+-            m_Time = M3.Text("Time", m_ControlsPage, "", M3Theme.Type.BodyMedium, new Vector2(0f, 46f), new Vector2(552f, 20f),
++            m_Time = M3.Text("Time", m_ControlsPage, "", M3Theme.Type.BodyMedium, new Vector2(0f, 90f), new Vector2(552f, 20f),
+                 M3Theme.OnSurfaceVariant);
+ 
+-            M3.IconButton("Back 10 s", m_ControlsPage, "replay_10", M3Button.Variant.Tonal, new Vector2(-100f, -20f),
++            M3.IconButton("Back 10 s", m_ControlsPage, "replay_10", M3Button.Variant.Tonal, new Vector2(-100f, 24f),
+                 () => Skip(-k_SkipSeconds));
+-            m_Play = M3.IconButton("Play", m_ControlsPage, "play_arrow", M3Button.Variant.Filled, new Vector2(0f, -20f), TogglePlay, 80f);
+-            M3.IconButton("Ahead 10 s", m_ControlsPage, "forward_10", M3Button.Variant.Tonal, new Vector2(100f, -20f),
++            m_Play = M3.IconButton("Play", m_ControlsPage, "play_arrow", M3Button.Variant.Filled, new Vector2(0f, 24f), TogglePlay, 80f);
++            M3.IconButton("Ahead 10 s", m_ControlsPage, "forward_10", M3Button.Variant.Tonal, new Vector2(100f, 24f),
+                 () => Skip(k_SkipSeconds));
+ 
+             const float width = 168f;
+-            M3.Button("Library", m_ControlsPage, "Library", M3Button.Variant.Tonal, new Vector2(-176f, -128f), ShowLibrary, "video_library",
++            M3.Button("Library", m_ControlsPage, "Library", M3Button.Variant.Tonal, new Vector2(-176f, -72f), ShowLibrary, "video_library",
+                 width);
+-            M3.Button("Next video", m_ControlsPage, "Next", M3Button.Variant.Tonal, new Vector2(0f, -128f), Next, "skip_next", width);
+-            M3.Button("Format", m_ControlsPage, "Format", M3Button.Variant.Tonal, new Vector2(176f, -128f), CycleFormat, "aspect_ratio",
++            M3.Button("Next video", m_ControlsPage, "Next", M3Button.Variant.Tonal, new Vector2(0f, -72f), Next, "skip_next", width);
++            M3.Button("Format", m_ControlsPage, "Format", M3Button.Variant.Tonal, new Vector2(176f, -72f), CycleFormat, "aspect_ratio",
+                 width);
++
++            // Passthrough, the green-screen cut, and whether the eyes stay apart: three toggles.
++            const float toggleWidth = 178f;
++            m_PassthroughButton = M3.Button("Passthrough", m_ControlsPage, "See-through", M3Button.Variant.Tonal,
++                new Vector2(-190f, -156f), TogglePassthrough, "visibility", toggleWidth);
++            m_ChromaButton = M3.Button("Chroma", m_ControlsPage, "Green screen", M3Button.Variant.Tonal,
++                new Vector2(0f, -156f), ToggleChromaKey, "auto_fix_high", toggleWidth);
++            m_StereoEyesButton = M3.Button("Stereo eyes", m_ControlsPage, "Stereo eyes", M3Button.Variant.Tonal,
++                new Vector2(190f, -156f), ToggleStereoEyes, "3d_rotation", toggleWidth);
+         }
+ 
+         void Page(int step)
+--- a/Assets/_Project/Demos/Video/Editor/VideoSetup.cs
++++ b/Assets/_Project/Demos/Video/Editor/VideoSetup.cs
+@@ -8,6 +8,8 @@
+     // 360 Video: a sphere to draw on, the player and its panel (built at runtime).
+     class VideoSetup : DemoSetup
+     {
++        const string ChromaKeyShaderName = "CardboardXR/ChromaKey";
++
+         public override string Name => "Video";
+         public override int Order => 20;
+ 
+@@ -19,7 +21,10 @@
+             Tagline = "360 and VR180 videos all around you",
+             Icon = "360",
+             Tint = new Color(0.7f, 0.25f, 0.29f),
+-            Requirements = new DemoRequirements { SixDof = Need.Off, Passthrough = Need.Off, Hands = Need.Off },
++            // 6DoF and passthrough: passthrough is what a green-screen video's cut shows through, and
++            // it needs ARCore running. Hands stay off, the largest part of the heat, since the video
++            // decoder and ARCore already are.
++            Requirements = new DemoRequirements { SixDof = Need.On, Passthrough = Need.On, Hands = Need.Off },
+         };
+ 
+         public override void BuildScene(string folder)
+@@ -27,10 +32,19 @@
+             // Double-sided in case the sphere is ever seen from outside, and white so the video's own
+             // colors show.
+             var material = StereoBuilder.CreateMaterial("Video Sphere", DemoAssets.Unlit, Color.white, null, 1f, folder);
++            // The green-screen cut, drawn over the passthrough image (see ChromaKey.shader). Falls back
++            // to the opaque material, so a missing shader costs the feature rather than the build.
++            var chromaShader = Shader.Find(ChromaKeyShaderName);
++            if (chromaShader == null)
++                Debug.LogWarning($"[Build] {ChromaKeyShaderName} not found: the video sphere will have no green-screen cut");
++            var chroma = chromaShader != null
++                ? StereoBuilder.CreateMaterial("Video Sphere Chroma", chromaShader, Color.white, null, 1f, folder)
++                : material;
+ 
+             var sphere = new GameObject("Video Sphere").AddComponent<VideoSphere>();
+             var serializedSphere = new SerializedObject(sphere);
+             serializedSphere.FindProperty("m_Material").objectReferenceValue = material;
++            serializedSphere.FindProperty("m_ChromaMaterial").objectReferenceValue = chroma;
+             serializedSphere.ApplyModifiedPropertiesWithoutUndo();
+ 
+             var demo = new GameObject("Video Demo").AddComponent<VideoDemo>();
+--- a/Assets/_Project/Scripts/Stereo/PassthroughController.cs
++++ b/Assets/_Project/Scripts/Stereo/PassthroughController.cs
+@@ -54,6 +54,8 @@
+         CommandBuffer m_Commands;
+         RenderTexture m_Texture;
+         bool m_On;
++        // Eyes apart while passthrough is on: see StereoEyes.
++        bool m_StereoEyes;
+         // 3DoF turned passthrough off, so it comes back with 6DoF.
+         bool m_ResumeWithSixDof;
+         // ArDebugView drives the AR camera itself.
+@@ -67,6 +69,26 @@
+ 
+         public bool IsOn => m_On;
+ 
++        // Keeps the eyes apart while passthrough is on, so the picture is drawn twice with the
++        // viewer's own eye separation: it has disparity, and a 3D video played over it keeps its
++        // depth. The image is still one flat plane at m_Distance, though, so the room reads as a
++        // window at that distance rather than as depth, and anything virtual drawn at another depth
++        // can double against it. The demos that draw things leave this off and take the flat window;
++        // the video demo turns it on, since the video is the one thing at another depth and the
++        // stereo is what it is there for.
++        public bool StereoEyes
++        {
++            get => m_StereoEyes;
++            set
++            {
++                if (m_StereoEyes == value)
++                    return;
++                m_StereoEyes = value;
++                if (m_On && m_Rig != null)
++                    m_Rig.MonoEyes = !value;
++            }
++        }
++
+         // Where the image should be, in meters from the camera, or null for m_Distance. It eases there.
+         public float? FocusDistance
+         {
+@@ -139,7 +161,7 @@
+             m_PoseDriver.enabled = on;
+             m_Fusion.EyesAtCamera = on;
+             if (m_Rig != null)
+-                m_Rig.MonoEyes = on;
++                m_Rig.MonoEyes = on && !m_StereoEyes;
+             // Shown once the first image has arrived.
+             m_Screen.enabled = on && m_HasImage;
+             VirtualEnvironment.SetAllHidden(on);

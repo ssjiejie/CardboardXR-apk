@@ -1,0 +1,795 @@
+Unity Editor version:    6000.6.8f1 (237b6593792b)
+Branch:                  6000.6/respin/6000.6.8f1-b6138bef9630
+Build type:              Release
+Batch mode:              YES
+System name:             Linux
+Distro version:          #1 SMP Tue Sep 15 20:26:43 CST 2026
+Kernel version:          6.6.117-45.14.1.tl4.x86_64
+Architecture:            x86_64
+Available memory:        126277 MB
+Date:                    2026-11-25T07:34:00Z
+VBCSCompilerPreWarmer: watching VBCSCompiler (PID 20108)
+VBCSCompilerPreWarmer: pre-warm launched (dotnet PID 20110)
+VBCSCompiler prewarm took 10.15 ms
+[Licensing::Module] Trying to connect to existing licensing client channel...
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-root" at "2026-11-25T07:34:00.162196Z"
+[SignatureVerifier] Application signature verification not supported on this platform.
+Initialize udev device monitor.
+
+COMMAND LINE ARGUMENTS:
+/opt/unity/Editor/Unity
+-batchmode
+-nographics
+-quit
+-logFile
+/workspace/CardboardXR-ChromaPassthrough/host_build.log
+-projectPath
+/workspace/CardboardXR-ChromaPassthrough
+-executeMethod
+ProjectBootstrap.CiBuild.BuildApk
+Successfully changed project path to: /workspace/CardboardXR-ChromaPassthrough
+/workspace/CardboardXR-ChromaPassthrough
+[UnityMemory] Configuration Parameters - Can be set up in boot.config
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-nav-mesh-worker=65536"
+    "memorysetup-temp-allocator-size-audio-worker=65536"
+    "memorysetup-temp-allocator-size-cloud-worker=32768"
+    "memorysetup-temp-allocator-size-preload-manager=33554432"
+    "memorysetup-remapper-allocator-initial-capacity=32768"
+    "memorysetup-temp-allocator-size-gfx=262144"
+    "memorysetup-allocator-temp-initial-block-size-main=262144"
+    "memorysetup-allocator-temp-initial-block-size-worker=262144"
+    "memorysetup-temp-allocator-size-background-worker=32768"
+    "memorysetup-temp-allocator-size-job-worker=262144"
+    "memorysetup-bucket-allocator-granularity=16"
+    "memorysetup-bucket-allocator-bucket-count=8"
+    "memorysetup-bucket-allocator-block-size=33554432"
+    "memorysetup-bucket-allocator-block-count=8"
+    "memorysetup-main-allocator-block-size=16777216"
+    "memorysetup-thread-allocator-block-size=16777216"
+    "memorysetup-main-allocator-mimalloc-enabled=1"
+    "memorysetup-gfx-main-allocator-block-size=16777216"
+    "memorysetup-gfx-thread-allocator-block-size=16777216"
+    "memorysetup-cache-allocator-block-size=4194304"
+    "memorysetup-typetree-allocator-block-size=2097152"
+    "memorysetup-profiler-bucket-allocator-granularity=16"
+    "memorysetup-profiler-bucket-allocator-bucket-count=8"
+    "memorysetup-profiler-bucket-allocator-block-size=33554432"
+    "memorysetup-profiler-bucket-allocator-block-count=8"
+    "memorysetup-profiler-allocator-block-size=16777216"
+    "memorysetup-profiler-editor-allocator-block-size=1048576"
+    "memorysetup-temp-allocator-size-main=16777216"
+    "memorysetup-job-temp-allocator-block-size=2097152"
+    "memorysetup-job-temp-allocator-block-size-background=1048576"
+    "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+Logging is directed to a specific file, skipping project log.
+Player connection [140193149536704]  Target information:
+
+Player connection [140193149536704]  * "[IP] 172.24.0.2 [Port] 55504 [Flags] 2 [Guid] 3415395291 [EditorId] 3415395291 [Version] 1048832 [Id] LinuxEditor(16,172.24.0.2) [Debug] 1 [PackageName] LinuxEditor [ProjectName] Editor" 
+
+Player connection [140193149536704]  * "[IP] 172.17.0.1 [Port] 55504 [Flags] 2 [Guid] 3415395291 [EditorId] 3415395291 [Version] 1048832 [Id] LinuxEditor(16,172.24.0.2) [Debug] 1 [PackageName] LinuxEditor [ProjectName] Editor" 
+
+Player connection [140193149536704] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [140193149536704] Host joined alternative multi-casting on [225.0.0.222:34997]...
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.18.3+d7ffd15
+  Session Id:              6d419e64084749b09608ef1d7a7fdc9d
+  Correlation Id:          8d3c90a7a8f3e6d8b1ac5bca2172d45b
+  External correlation Id: 4654220496659768114
+  Machine Id:              D7nTUnjNAmtsUMcnoyrqkgIbYdM=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-root" (connect: 0.00s, validation: 0.03s, handshake: 0.00s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-root-notifications" at "2026-11-25T07:34:00.195927Z"
+[Licensing::Module] Error: Access token is unavailable; failed to update
+Input System module state changed to: Initialized.
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] License group:
+  Id: ewogICJzdWJzR3JvdXAiIDogInVuaXR5IGVkaXRvciIsCiAgIm5hbWVzcGFjZSIgOiAidW5pdHlfZWRpdG9yIiwKICAidHlwZSIgOiAiRURJVE9SIiwKICAidGFnIiA6ICJVbml0eVBlcnNvbmFsXXXX
+  Product: Unity Personal Version
+  Type: Assigned
+  Expiration: Unlimited
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+[Licensing::Client] Successfully updated license, isAsync: True, time: 0.01
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] Licensing Background thread has ended after 0.05s
+Initialising UDS system complete:
+  - System type: Client
+  - Resource namespace: 413bf4a52c9549e4f3781318e63758b4
+  - Shared memory size: 1073741824
+  - Command buffer id: 1052624
+  - Command buffer size: 8192
+  - Hashmap size: 4194304
+  - Service connected: false
+[Package Manager] Connected to IPC stream "Upm-20073" after 0.4 seconds.
+[Licensing::Client] Successfully resolved entitlement details
+Library Redirect Path: Library/
+Launching Unity Data Store - /opt/unity/Editor/Data/Tools/Unity.DataStore 
+Unity Data Store artifact dir = Library/DataStore, working dir = /workspace/CardboardXR-ChromaPassthroughALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5204:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5204:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5204:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5727:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
+FMOD failed to initialize the output device.: "Error initializing output device. " (60)
+Forced to initialize FMOD to to the device driver's system output rate 48000, this may impact performance and/or give inconsistent experiences compared to selected sample rate 48000
+ALSA lib confmisc.c:855:(parse_card) cannot find card '0'
+ALSA lib conf.c:5204:(_snd_config_evaluate) function snd_func_card_inum returned error: No such file or directory
+ALSA lib confmisc.c:422:(snd_func_concat) error evaluating strings
+ALSA lib conf.c:5204:(_snd_config_evaluate) function snd_func_concat returned error: No such file or directory
+ALSA lib confmisc.c:1342:(snd_func_refer) error evaluating name
+ALSA lib conf.c:5204:(_snd_config_evaluate) function snd_func_refer returned error: No such file or directory
+ALSA lib conf.c:5727:(snd_config_expand) Evaluate error: No such file or directory
+ALSA lib pcm.c:2721:(snd_pcm_open_noupdate) Unknown PCM default
+FMOD failed to initialize the output device.: "Error initializing output device. " (60)
+FMOD initialized on nosound output
+Unity Data Store running and initialised
+[Licensing::Client] Successfully resolved entitlement details
+[Physics::Module] Selected backend (deferred post-plugins).
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+Initialize engine version: 6000.6.8f1 (237b6593792b)
+[EntityIdStore] init: VM path (explicit commit), pageSize=4096, blockCount=262144, entitiesPerBlock=1024, blocksPerSlotPage=0, slots reserved=4294967296 bytes
+[Subsystems] Discovering subsystems at path /opt/unity/Editor/Data/Resources/UnitySubsystems
+[Subsystems] Discovering subsystems at path /workspace/CardboardXR-ChromaPassthrough/Assets
+Forcing GfxDevice: Null
+GfxDevice: creating device client; kGfxThreadingModeNonThreaded
+NullGfxDevice:
+    Version:  NULL 1.0 [1.0]
+    Renderer: Null Device
+    Vendor:   Unity Technologies
+Initialize mono
+Mono path[0] = '/opt/unity/Editor/Data/Managed'
+Mono path[1] = '/opt/unity/Editor/Data/BCLExtensions/runtime/netstandard2.1'
+Mono path[2] = '/opt/unity/Editor/Data/MonoBleedingEdge/lib/mono/unityjit-linux'
+Mono config path = '/opt/unity/Editor/Data/MonoBleedingEdge/etc'
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56073
+CodeReloadManager initialized
+ImportWorker Server TCP listen port: 0
+AcceleratorClientConnectionCallback - disconnected - :0
+Begin MonoManager ReloadAssembly
+Registering precompiled unity dll's ...
+Register platform support module: /opt/unity/Editor/Data/PlaybackEngines/AndroidPlayer/UnityEditor.Android.Extensions.dll
+Register platform support module: /opt/unity/Editor/Data/PlaybackEngines/LinuxStandaloneSupport/UnityEditor.LinuxStandalone.Extensions.dll
+Registered in 0.001645 seconds.
+Native extension for LinuxStandalone target not found
+Native extension for Android target not found
+Package Manager log level set to [2]
+[Licensing::Client] Successfully resolved entitlement details
+ScheduleIndexationOnStartup MainProcess:False IndexOnStartup:False
+Scripting: successfully reloaded assembly
+- Finished resetting the current domain, in 15.053 seconds
+Domain Reload Profiling: 15724ms
+	BeginReloadAssembly (129ms)
+		CreateAndSetChildDomain (4ms)
+	RebuildCommonClasses (5ms)
+	RebuildNativeTypeToScriptingClass (20ms)
+	initialDomainReloadingComplete (84ms)
+	LoadAllAssembliesAndSetupDomain (430ms)
+		LoadAssemblies (125ms)
+		TypeCache.Refresh (321ms)
+			TypeCache.ScanAssembly (303ms)
+		AnalyzeDomain (1ms)
+	FinalizeReload (15055ms)
+		SetupLoadedEditorAssemblies (0ms)
+			InitializePlatformSupportModulesInManaged (10ms)
+			BeforeProcessingInitializeOnLoad (132ms)
+			ProcessInitializeOnLoadAttributes (119ms)
+			ProcessInitializeOnLoadMethodAttributes (14561ms)
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Client] Successfully resolved entitlement details
+Application.AssetDatabase Initial Refresh Start
+[Package Manager] Restoring resolved packages state from cache
+[Licensing::Client] Successfully resolved entitlement details
+[Package Manager] Registered 72 packages:
+  Packages from [https://packages.unity.com]:
+    com.unity.ai.inference@2.6.1 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.ai.inference@9a123aee5df7)
+    com.unity.ai.navigation@2.0.16 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.ai.navigation@d0cf77b009bb)
+    com.unity.collab-proxy@2.13.6 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.collab-proxy@4628d2ba6ea4)
+    com.unity.ide.rider@3.1.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.ide.rider@570989d4a882)
+    com.unity.ide.visualstudio@2.0.26 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.ide.visualstudio@a99d56dec63f)
+    com.unity.inputsystem@1.20.1 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.inputsystem@2436e68c60c4)
+    com.unity.visualscripting@1.9.12 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.visualscripting@4edfcc09512f)
+    com.unity.xr.arcore@6.7.1 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.xr.arcore@cbc4d469ea60)
+    com.unity.xr.arfoundation@6.7.1 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.xr.arfoundation@c9dc5a166c04)
+    com.unity.xr.arkit@6.7.1 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.xr.arkit@9072c6104603)
+    com.unity.xr.hands@1.9.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.xr.hands@aec06f9cdb0b)
+    com.unity.xr.interaction.toolkit@3.6.1 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.xr.interaction.toolkit@530ce2e6c59e)
+    com.unity.xr.management@4.7.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.xr.management@2ad85c7dd480)
+    com.unity.xr.core-utils@2.6.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.xr.core-utils@a8b900321199)
+    com.unity.xr.legacyinputhelpers@3.0.1 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.xr.legacyinputhelpers@3f62d634f63b)
+    com.unity.dt.app-ui@2.2.4 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.dt.app-ui@8606a9847e5b)
+    com.unity.nuget.newtonsoft-json@3.2.2 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.nuget.newtonsoft-json@4dfd81071c64)
+    com.unity.nuget.mono-cecil@1.11.6 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.nuget.mono-cecil@ecb9724e46ff)
+    com.unity.searcher@4.9.5 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.searcher@a463122f2c00)
+    com.unity.profiling.core@1.0.3 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.profiling.core@8a49f7027d06)
+  Built-in packages:
+    com.unity.render-pipelines.universal@17.6.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.render-pipelines.universal@94ee9226e1b5)
+    com.unity.test-framework@1.8.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.test-framework@ba1d06c8c02f)
+    com.unity.timeline@6.6.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.timeline@f3a8302995bc)
+    com.unity.ugui@2.6.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.ugui@b0f69f485d8c)
+    com.unity.modules.accessibility@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.accessibility)
+    com.unity.modules.adaptiveperformance@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.adaptiveperformance)
+    com.unity.modules.ai@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.ai)
+    com.unity.modules.androidjni@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.androidjni)
+    com.unity.modules.animation@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.animation)
+    com.unity.modules.assetbundle@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.assetbundle)
+    com.unity.modules.audio@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.audio)
+    com.unity.modules.cloth@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.cloth)
+    com.unity.modules.director@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.director)
+    com.unity.modules.imageconversion@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.imageconversion)
+    com.unity.modules.imgui@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.imgui)
+    com.unity.modules.jsonserialize@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.jsonserialize)
+    com.unity.modules.particlesystem@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.particlesystem)
+    com.unity.modules.physics@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.physics)
+    com.unity.modules.physics2d@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.physics2d)
+    com.unity.modules.physicscore2d@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.physicscore2d)
+    com.unity.modules.screencapture@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.screencapture)
+    com.unity.modules.terrain@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.terrain)
+    com.unity.modules.terrainphysics@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.terrainphysics)
+    com.unity.modules.tetgen@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.tetgen)
+    com.unity.modules.tilemap@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.tilemap)
+    com.unity.modules.timelinefoundation@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.timelinefoundation)
+    com.unity.modules.ui@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.ui)
+    com.unity.modules.uielements@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.uielements)
+    com.unity.modules.umbra@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.umbra)
+    com.unity.modules.unityanalytics@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.unityanalytics)
+    com.unity.modules.unitywebrequest@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.unitywebrequest)
+    com.unity.modules.unitywebrequestassetbundle@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.unitywebrequestassetbundle)
+    com.unity.modules.unitywebrequestaudio@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.unitywebrequestaudio)
+    com.unity.modules.unitywebrequesttexture@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.unitywebrequesttexture)
+    com.unity.modules.unitywebrequestwww@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.unitywebrequestwww)
+    com.unity.modules.vectorgraphics@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.vectorgraphics)
+    com.unity.modules.vehicles@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.vehicles)
+    com.unity.modules.video@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.video)
+    com.unity.modules.wind@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.wind)
+    com.unity.modules.xr@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.xr)
+    com.unity.modules.subsystems@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.subsystems)
+    com.unity.modules.hierarchycore@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.modules.hierarchycore)
+    com.unity.mathematics@1.4.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.mathematics@9c2fa23d2d82)
+    com.unity.collections@6.6.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.collections@9e37b6853312)
+    com.unity.editorcoroutines@6.6.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.editorcoroutines@af8abaa9a9d2)
+    com.unity.ext.nunit@2.1.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.ext.nunit@508b95ff9afe)
+    com.unity.render-pipelines.core@17.6.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.render-pipelines.core@8dff0559020f)
+    com.unity.shadergraph@17.6.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.shadergraph@eae1bed04ba5)
+    com.unity.render-pipelines.universal-config@17.6.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.render-pipelines.universal-config@b1357eef5cd3)
+    com.unity.burst@2.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.burst@c3ed5b778d56)
+    com.unity.test-framework.performance@6.6.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.test-framework.performance@7f00aa7e703f)
+    com.unity.graph-authoring@1.0.0 (location: /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.graph-authoring@f8926ccf2c8f)
+[Subsystems] Looking for new subsystems at path /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.xr.arfoundation@c9dc5a166c04
+[Subsystems] Novel subsystem found at Library/PackageCache/com.unity.xr.arfoundation@c9dc5a166c04/Runtime/UnitySubsystemsManifest.json
+[Subsystems] Discovering subsystems at path /opt/unity/Editor/Data/Resources/UnitySubsystems
+[Subsystems] Discovering subsystems at path /workspace/CardboardXR-ChromaPassthrough/Assets
+[Subsystems] Discovering subsystems at path /workspace/CardboardXR-ChromaPassthrough/Library/PackageCache/com.unity.xr.arfoundation@c9dc5a166c04
+[Subsystems] No descriptors matched for  examples in Library/PackageCache/com.unity.xr.arfoundation@c9dc5a166c04/Runtime/UnitySubsystemsManifest.json.
+[Subsystems] 1 'inputs' descriptors matched in Library/PackageCache/com.unity.xr.arfoundation@c9dc5a166c04/Runtime/UnitySubsystemsManifest.json
+[Subsystems] No descriptors matched for  displays in Library/PackageCache/com.unity.xr.arfoundation@c9dc5a166c04/Runtime/UnitySubsystemsManifest.json.
+[Subsystems] 1 'meshings' descriptors matched in Library/PackageCache/com.unity.xr.arfoundation@c9dc5a166c04/Runtime/UnitySubsystemsManifest.json
+[Package Manager] Done registering packages in 0.00 seconds
+Starting: /opt/unity/Editor/Data/Tools/BuildPipeline/bee_backend --ipc --defer-dag-verification --dagfile="Library/Bee/1300b0aE.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssemblies
+WorkingDir: /workspace/CardboardXR-ChromaPassthrough
+warn: Unity.ILPP.Runner.PostProcessingAssemblyLoadContext[0]
+      Assembly system.runtime.interopservices.windowsruntime has duplicate hint path. Ignoring "/opt/unity/Editor/Data/UnityReferenceAssemblies/unity-4.8-api/Facades/System.Runtime.InteropServices.WindowsRuntime.dll" in favor of "/opt/unity/Editor/Data/NetStandard/Extensions/2.0.0/System.Runtime.InteropServices.WindowsRuntime.dll"
+warn: Unity.ILPP.Runner.PostProcessingAssemblyLoadContext[0]
+      Assembly system.componentmodel.composition has duplicate hint path. Ignoring "/opt/unity/Editor/Data/UnityReferenceAssemblies/unity-4.8-api/System.ComponentModel.Composition.dll" in favor of "/opt/unity/Editor/Data/NetStandard/compat/2.1.0/shims/netfx/System.ComponentModel.Composition.dll"
+DisplayProgressbar: Compiling Scripts
+ExitCode: 0 Duration: 0s326ms
+[1151/1572  0s] ILPP-Configuration Library/ilpp-configuration.nevergeneratedoutput
+*** Tundra build success (0.29 seconds), 1 items updated, 1572 evaluated
+Total cache size 120280380
+AssetDatabase: script compilation time: 0.856641s
+Total cache size after purge 120280380, took 00:00:00.0527140
+Begin MonoManager ReloadAssembly
+Symbol file LoadedFromMemory is not a mono symbol file
+Symbol file LoadedFromMemory is not a mono symbol file
+'Packages/com.unity.render-pipelines.core/Editor/Deprecated.cs' contains partial class of Unity.Object, exactly 1 of the partial classes needs to be in a file with the same filename. This is to know the one that can be referenced from ie. GameObjects
+'Packages/com.unity.render-pipelines.core/Editor/Deprecated.cs' contains partial class of Unity.Object, exactly 1 of the partial classes needs to be in a file with the same filename. This is to know the one that can be referenced from ie. GameObjects
+Refreshing native plugins compatible for Editor in 3.86 ms, found 3 plugins.
+Native extension for LinuxStandalone target not found
+Native extension for Android target not found
+Refreshing native plugins compatible for Editor in 24.74 ms, found 3 plugins.
+ScheduleIndexationOnStartup MainProcess:True IndexOnStartup:True
+Scripting: successfully reloaded assembly
+- Finished resetting the current domain, in  1.779 seconds
+Domain Reload Profiling: 3315ms
+	BeginReloadAssembly (342ms)
+		DisableScriptedObjects (43ms)
+		CreateAndSetChildDomain (63ms)
+	RebuildCommonClasses (12ms)
+	RebuildNativeTypeToScriptingClass (14ms)
+	initialDomainReloadingComplete (102ms)
+	LoadAllAssembliesAndSetupDomain (1065ms)
+		LoadAssemblies (382ms)
+		TypeCache.Refresh (408ms)
+			TypeCache.ScanAssembly (381ms)
+		AnalyzeDomain (168ms)
+			BuildScriptInfoCaches (153ms)
+			ResolveRequiredComponents (12ms)
+	FinalizeReload (1780ms)
+		SetupLoadedEditorAssemblies (0ms)
+			LogAssemblyErrors (3ms)
+			InitializePlatformSupportModulesInManaged (8ms)
+			BeforeProcessingInitializeOnLoad (168ms)
+			ProcessInitializeOnLoadAttributes (720ms)
+			ProcessInitializeOnLoadMethodAttributes (234ms)
+			AfterProcessingInitializeOnLoad (5ms)
+			EditorAssembliesLoaded (3ms)
+		AwakeInstancesAfterBackupRestoration (86ms)
+Starting new worker id: 0 with log in /workspace/CardboardXR-ChromaPassthrough/Logs/AssetImportWorkerHW0.log
+
+Asset Pipeline Refresh (id=6d419fdd1aacef02c987bd64e167385d): Total: 13.836 seconds - Initiated by InitialRefreshV2(ForceSynchronousImport)
+	(Values over 0.05ms)
+	Summary:
+		Imports: total=0 (actual=0, local cache=0, cache server=0)
+		Asset DB Process Time: managed=0 ms, native=11267 ms
+		Asset DB Callback time: managed=52 ms, native=7 ms
+		Scripting: domain reloads=1, domain reload time=1579 ms, compile time=862 ms, other=67 ms
+		Project Asset Count: scripts=2173, non-scripts=4777
+		Asset File Changes: new=0, changed=0, moved=0, deleted=0
+		Scan Filter Count: 1
+	InvokePackagesCallback: 7.648ms
+	ApplyChangesToAssetFolders: 0.568ms
+	Scan: 8598.958ms
+	Collect global state as custom dependencies: 23.824ms
+	CategorizeScriptCompilationAssets: 56.195ms
+	ProcessAssetsWithTransientArtifactChanges: 162.281ms
+	CategorizeAssets: 292.881ms
+	CompileScripts: 862.205ms
+	ImportOutOfDateAssets: 1970.985ms (1816.322ms without children)
+		ReloadNativeAssets: 0.073ms
+		UnloadImportedAssets: 4.728ms
+		EnsureUptoDateAssetsAreRegisteredWithGuidPM: 2.721ms
+		ImportSchedulerStart: 147.137ms
+	PostProcessAllAssets: 52.184ms
+		MonoPostProcessAllAssets: 52.063ms
+			UniversalRenderPipelineGlobalSettingsPostprocessor.OnPostprocessAllAssets 25.321ms
+			SpeedTree9Postprocessor.OnPostprocessAllAssets 2.658ms
+			WindowAssetPostprocessingWatcher.OnPostprocessAllAssets 2.347ms
+			EditModeScopePostprocessor.OnPostprocessAllAssets 1.288ms
+			RenderPipelineGlobalSettingsPostprocessor.OnPostprocessAllAssets 0.830ms
+			ShaderReflectionAssetPostProcessor.OnPostprocessAllAssets 0.714ms
+			InputActionAssetPostprocessor.OnPostprocessAllAssets 0.380ms
+			ReferencedClipsPostProcessor.OnPostprocessAllAssets 0.361ms
+			TerrainToolbarOverlayPostProcessor.OnPostprocessAllAssets 0.307ms
+			AssetDatabaseCallbacks.OnPostprocessAllAssets 0.247ms
+			ProjectSettingsPostprocessor.OnPostprocessAllAssets 0.239ms
+			SyncVS.PostprocessSyncProject 0.191ms
+	UnloadStreamsBegin: 2.196ms
+	PersistCurrentRevisions: 0.266ms
+	GenerateScriptTypeHashes: 30.075ms
+	GenerateScriptTypeSerializationHashes: 41.254ms
+	Untracked: 1802.063ms
+
+Application.AssetDatabase Initial Refresh End
+Shader Hidden/ChartRasterizerHardware is not supported: GPU does not support conservative rasterization
+Shader Hidden/ChartRasterizerHardware is not supported: GPU does not support conservative rasterization
+Scanning for USB devices : 0.799ms
+Initializing Unity extensions:
+UpdateMenuTitleForLanguage: 10
+[MODES] ModeService[none].Initialize
+[MODES] ModeService[none].LoadModes
+[MODES] Loading mode Default (0) for mode-current-id-CardboardXR
+Unloading 224 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 10314 unused Assets / (10.8 MB). Loaded Objects now: 11107.
+Memory consumption went from 360.7 MB to 349.9 MB.
+Total: 38.495557 ms (FindLiveObjects: 0.832906 ms CreateObjectMapping: 0.949686 ms MarkObjects: 24.001632 ms  DeleteObjects: 12.563924 ms)
+
+[CiBuild] building backend=IL2CPP arch=ARM64
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:23)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+ProjectBootstrap.CiBuild:BuildApk () (at Assets/Editor/CiBuild.cs:45)
+
+(Filename: Assets/Editor/CiBuild.cs Line: 45)
+
+Importing 'GUID: 0000000000000000b000000000000000 - Path: ProjectSettings/EditorBuildSettings.asset' with importer (LibraryAssetImporter)
+Imported 'GUID: 0000000000000000b000000000000000' -> (Import Result ID: 'be1177a16ec8dd335ba70f716b1d64c0') in 0.010 seconds [static dependencies only]. Details - ImportResultOutputID=0a89a5c5f492143e0fa186859e17ba6f DependenciesID=e8de85c5c324548068d14c593a64b6af StaticDependenciesID=3c53884e2ef0fb8eb23764bcb60c8ebb 
+Refreshing native plugins compatible for Editor in 3.97 ms, found 3 plugins.
+
+Asset Pipeline Refresh (id=e7f9b34bc24468a9b806a678d1666db8): Total: 0.607 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+	(Values over 0.05ms)
+	Summary:
+		Imports: total=1 (actual=1, local cache=0, cache server=0)
+		Asset DB Process Time: managed=2 ms, native=241 ms
+		Asset DB Callback time: managed=347 ms, native=14 ms
+		Scripting: domain reloads=0, domain reload time=0 ms, compile time=0 ms, other=0 ms
+		Project Asset Count: scripts=2173, non-scripts=4777
+		Asset File Changes: new=0, changed=0, moved=0, deleted=0
+		Scan Filter Count: 1
+	ApplyChangesToAssetFolders: 0.140ms
+	Scan: 8.378ms
+	Collect global state as custom dependencies: 0.163ms
+	ProcessAssetsWithTransientArtifactChanges: 0.238ms
+	CategorizeAssets: 191.170ms
+	ImportOutOfDateAssets: 14.370ms (0.449ms without children)
+		ImportManagerImport: 11.734ms (1.363ms without children)
+		ReloadNativeAssets: 0.073ms
+		UnloadImportedAssets: 0.160ms
+		EnsureUptoDateAssetsAreRegisteredWithGuidPM: 1.589ms
+		ImportSchedulerStart: 0.363ms
+	PostProcessAllAssets: 356.608ms
+		XRBuildSystem.XRAssetImported 8.588ms
+		MonoPostProcessAllAssets: 347.652ms
+			AssetPostprocessor.OnPostprocessAllAssets 206.103ms
+			AssetCallbacks.OnPostprocessAllAssets 72.476ms
+			StyleCatalogPostProcessor.OnPostprocessAllAssets 34.001ms
+			BuilderAssetPostprocessor.OnPostprocessAllAssets 9.672ms
+			ShaderGraphAssetPostProcessor.OnPostprocessAllAssets 5.609ms
+			AssetChangedListener.OnPostprocessAllAssets 4.335ms
+			RetainedModeAssetPostprocessor.OnPostprocessAllAssets 1.629ms
+			MaterialPostprocessor.OnPostprocessAllAssets 1.005ms
+			ArtifactBrowserPostProcessor.OnPostprocessAllAssets 0.660ms
+			EnvironmentAssetPostprocessor.OnPostprocessAllAssets 0.620ms
+			TextAssetPostProcessor.OnPostprocessAllAssets 0.528ms
+			ModelAssetProcessor.OnPostprocessAllAssets 0.524ms
+			PostProcessor.OnPostprocessAllAssets 0.453ms
+			AudioMixerPostprocessor.OnPostprocessAllAssets 0.426ms
+			InputActionJsonNameModifierAssetProcessor.OnPostprocessAllAssets 0.409ms
+			UVCSAssetPostprocessor.OnPostprocessAllAssets 0.374ms
+			TMPro_TexturePostProcessor.OnPostprocessAllAssets 0.318ms
+			AssetEvents.OnPostprocessAllAssets 0.310ms
+			SpeedTreePostProcessor.OnPostprocessAllAssets 0.232ms
+			SamplePostprocessor.OnPostprocessAllAssets 0.224ms
+			ThemePostprocessor.OnPostprocessAllAssets 0.210ms
+			ConfigAssetsTracker.OnPostprocessAllAssets 0.203ms
+			InputActionAssetPostprocessor.OnPostprocessAllAssets 0.159ms
+			ScenarioDriftAssetsTracker.OnPostprocessAllAssets 0.155ms
+			AssetReloadNotifier.OnPostprocessAllAssets 0.147ms
+			RenderPipelineGlobalSettingsPostprocessor.OnPostprocessAllAssets 0.080ms
+			AudioContainerPostProcessor.OnPostprocessAllAssets 0.078ms
+	PostAssetChangesProfiler: 5.645ms
+	GatherAllCurrentPrimaryImportResultRevisions: 1.940ms
+	UnloadStreamsBegin: 0.164ms
+	PersistCurrentRevisions: 0.278ms
+	Untracked: 27.702ms
+
+Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 60 unused Assets / (11.6 KB). Loaded Objects now: 11123.
+Memory consumption went from 370.6 MB to 370.6 MB.
+Total: 25.508785 ms (FindLiveObjects: 0.450768 ms CreateObjectMapping: 0.409169 ms MarkObjects: 24.423541 ms  DeleteObjects: 0.091569 ms)
+
+Refreshing native plugins compatible for Editor in 3.44 ms, found 3 plugins.
+Asset Pipeline Refresh (id=c5ecb07e4cbd27d3aaa2b837c60a3331): Total: 0.085 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Refreshing native plugins compatible for Editor in 3.73 ms, found 3 plugins.
+Asset Pipeline Refresh (id=a5e53d833e25e36c3bdb3a095a4feb95): Total: 0.075 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Refreshing native plugins compatible for Editor in 3.55 ms, found 3 plugins.
+Asset Pipeline Refresh (id=6c8600af40d445ae6add7de6e15e0997): Total: 0.061 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Worker ready: AssetImportWorkerHW0 0
+Refreshing native plugins compatible for Editor in 3.56 ms, found 3 plugins.
+Asset Pipeline Refresh (id=a4f6945268455f1519a58298abe77866): Total: 0.073 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Refreshing native plugins compatible for Editor in 3.47 ms, found 3 plugins.
+Asset Pipeline Refresh (id=f36dcae6f809044b0987243ceeb3417b): Total: 0.059 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Refreshing native plugins compatible for Editor in 3.45 ms, found 3 plugins.
+Asset Pipeline Refresh (id=78f6883ab503dd1d0a7866da6bc01ebd): Total: 0.070 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Can't add component 'MeshFilter' to Boundary Plane because such a component is already added to the game object!
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:23)
+UnityEngine.GameObject:Internal_AddComponentWithType (System.Type)
+UnityEngine.GameObject:AddComponent (System.Type) (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/GameObject.bindings.cs:264)
+UnityEngine.GameObject:.ctor (string,System.Type[]) (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/GameObject.bindings.cs:428)
+ProjectBootstrap.StereoBuilder:BuildRoomBoundary (UnityEngine.GameObject,CardboardXR.Stereo.HeadPoseFusion,UnityEngine.Shader) (at Assets/Editor/ProjectBootstrap/StereoBuilder.cs:364)
+ProjectBootstrap.StereoBuilder:BuildCoreScene () (at Assets/Editor/ProjectBootstrap/StereoBuilder.cs:229)
+ProjectBootstrap.StereoBuilder:BuildScenes () (at Assets/Editor/ProjectBootstrap/StereoBuilder.cs:168)
+ProjectBootstrap.StereoBuilder:BuildAndroid () (at Assets/Editor/ProjectBootstrap/StereoBuilder.cs:65)
+ProjectBootstrap.CiBuild:BuildApk () (at Assets/Editor/CiBuild.cs:47)
+
+[Assets/Editor/ProjectBootstrap/StereoBuilder.cs line 229]
+
+Can't add component 'MeshRenderer' to Boundary Plane because such a component is already added to the game object!
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:23)
+UnityEngine.GameObject:Internal_AddComponentWithType (System.Type)
+UnityEngine.GameObject:AddComponent (System.Type) (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/GameObject.bindings.cs:264)
+UnityEngine.GameObject:.ctor (string,System.Type[]) (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/GameObject.bindings.cs:428)
+ProjectBootstrap.StereoBuilder:BuildRoomBoundary (UnityEngine.GameObject,CardboardXR.Stereo.HeadPoseFusion,UnityEngine.Shader) (at Assets/Editor/ProjectBootstrap/StereoBuilder.cs:364)
+ProjectBootstrap.StereoBuilder:BuildCoreScene () (at Assets/Editor/ProjectBootstrap/StereoBuilder.cs:229)
+ProjectBootstrap.StereoBuilder:BuildScenes () (at Assets/Editor/ProjectBootstrap/StereoBuilder.cs:168)
+ProjectBootstrap.StereoBuilder:BuildAndroid () (at Assets/Editor/ProjectBootstrap/StereoBuilder.cs:65)
+ProjectBootstrap.CiBuild:BuildApk () (at Assets/Editor/CiBuild.cs:47)
+
+[Assets/Editor/ProjectBootstrap/StereoBuilder.cs line 229]
+
+Refreshing native plugins compatible for Editor in 3.56 ms, found 3 plugins.
+Asset Pipeline Refresh (id=a26d3b577800a9e508275733f15a4de0): Total: 0.061 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Refreshing native plugins compatible for Editor in 3.61 ms, found 3 plugins.
+Asset Pipeline Refresh (id=8d48ad0c4c2d59fcba141698057f0d1e): Total: 0.073 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Refreshing native plugins compatible for Editor in 3.46 ms, found 3 plugins.
+Asset Pipeline Refresh (id=e38d6bf8cf3838a959a35b2ceb50a9d2): Total: 0.061 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Importing 'GUID: b3846d6c0eb434ce58564ec5aee33e63 - Path: Assets/_Project/Stereo/Generated/Boundary Plane.prefab' with importer (PrefabImporter)
+Imported 'GUID: b3846d6c0eb434ce58564ec5aee33e63' -> (Import Result ID: '7092dda6d604e4baa51eaece62d1a82e') in 0.005 seconds [static and dynamic dependencies]. Details - ImportResultOutputID=3776ea812f69a867fbb35caffe63bf82 DependenciesID=0e1c072dd0e38d7973c6937ffdcbece5 StaticDependenciesID=0a5a05d048157d2c24f6a02dd49bb2c1 
+Refreshing native plugins compatible for Editor in 3.77 ms, found 3 plugins.
+Asset Pipeline Refresh (id=bd5ab8df7b353e1d79f264a1998e21ae): Total: 0.090 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Refreshing native plugins compatible for Editor in 3.68 ms, found 3 plugins.
+Asset Pipeline Refresh (id=78499bb23a68f7189a4187cd9cd86935): Total: 0.062 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Importing 'GUID: b0645af77ee2c46d7bc738f278a5d54d - Path: Assets/_Project/Stereo/Generated/Placed Cube.mat' with importer (NativeFormatImporter)
+Imported 'GUID: b0645af77ee2c46d7bc738f278a5d54d' -> (Import Result ID: 'f9267eddefa1919e39130b1d3f268211') in 0.001 seconds [static dependencies only]. Details - ImportResultOutputID=cec106fab811c4da0d353d131fe12b6a DependenciesID=8574582ecd80ebce6ae44634f6e5367f StaticDependenciesID=e96c032c9ae63eee9831f0fa3e77a139 
+Refreshing native plugins compatible for Editor in 3.73 ms, found 3 plugins.
+Asset Pipeline Refresh (id=6ec442aad6ae98f8bbfb14c8854f9422): Total: 0.085 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Refreshing native plugins compatible for Editor in 3.70 ms, found 3 plugins.
+Asset Pipeline Refresh (id=bd546ddc8593e9ba4adafd9219454cb5): Total: 0.063 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Refreshing native plugins compatible for Editor in 3.61 ms, found 3 plugins.
+Asset Pipeline Refresh (id=ab6fd504da9741269b67254b5fda88e5): Total: 0.074 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Refreshing native plugins compatible for Editor in 3.63 ms, found 3 plugins.
+Asset Pipeline Refresh (id=63cae11eca935350bbf997ada0bde81a): Total: 0.066 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Importing 'GUID: 620344c174bdd42ccbfd23835e88c295 - Path: Assets/_Project/Stereo/Generated/Placed Cube.prefab' with importer (PrefabImporter)
+Imported 'GUID: 620344c174bdd42ccbfd23835e88c295' -> (Import Result ID: '19dea2ccd14cb17132752d2b16ba339f') in 0.006 seconds [static and dynamic dependencies]. Details - ImportResultOutputID=5da1d9f0f1f2ccf67fdb5346d7464dcf DependenciesID=a18195d7bdda1bfdfb986dd468df5a92 StaticDependenciesID=2d5c74b05c77fe36acec5bdbcbf2dfa2 
+Refreshing native plugins compatible for Editor in 3.52 ms, found 3 plugins.
+Asset Pipeline Refresh (id=82ed015af92a68c4d8cef61dfe662fd3): Total: 0.079 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Refreshing native plugins compatible for Editor in 3.59 ms, found 3 plugins.
+Asset Pipeline Refresh (id=964e5566725b98fa3bb92b5e0e775cd4): Total: 0.083 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Importing 'GUID: 51d2a3992300f4fd592bad22721bf6da - Path: Assets/_Project/Stereo/Generated/Hand Ray.mat' with importer (NativeFormatImporter)
+Imported 'GUID: 51d2a3992300f4fd592bad22721bf6da' -> (Import Result ID: '0691544aa339d6e5f5931fa6938cd8d2') in 0.001 seconds [static dependencies only]. Details - ImportResultOutputID=af165a001aa4bed99e670d5f4c4a0518 DependenciesID=a07c37e6a08b14e9dcf814af1a911e56 StaticDependenciesID=c263d2f1cb34f5355704f5c4c9840c77 
+Refreshing native plugins compatible for Editor in 3.67 ms, found 3 plugins.
+Asset Pipeline Refresh (id=f4d42412a4caa0b74a12c03ffa04ca62): Total: 0.077 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Refreshing native plugins compatible for Editor in 3.64 ms, found 3 plugins.
+Asset Pipeline Refresh (id=cc3cb66677992c0d1ab46d7178ec982e): Total: 0.060 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Importing 'GUID: 9811b953567714ef9bfee18ac36d23ea - Path: Assets/_Project/Stereo/Generated/Hand Joint.mat' with importer (NativeFormatImporter)
+Imported 'GUID: 9811b953567714ef9bfee18ac36d23ea' -> (Import Result ID: 'a5c66f936173b182082a1c671d0eb5b1') in 0.001 seconds [static dependencies only]. Details - ImportResultOutputID=b6a11619e6f5592ffc2ad0af64c70c06 DependenciesID=f6e5adaabdbe5a9fa61adf3024d6f5d7 StaticDependenciesID=98a139b53fcfecae91652ab911458ae1 
+Refreshing native plugins compatible for Editor in 3.53 ms, found 3 plugins.
+Asset Pipeline Refresh (id=0c6cd56990534b3589e8a634898f58be): Total: 0.073 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Refreshing native plugins compatible for Editor in 3.41 ms, found 3 plugins.
+Asset Pipeline Refresh (id=f7c77adbec43215b3a8d77d4481fc3e2): Total: 0.061 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Refreshing native plugins compatible for Editor in 3.56 ms, found 3 plugins.
+Asset Pipeline Refresh (id=ac9c9f04ae052ecf0a8747a82a718603): Total: 0.069 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Importing 'GUID: b0645af77ee2c46d7bc738f278a5d54d - Path: Assets/_Project/Stereo/Generated/Placed Cube.mat' with importer (NativeFormatImporter)
+Imported 'GUID: b0645af77ee2c46d7bc738f278a5d54d' -> (Import Result ID: 'de110d60b33de8ea61f9a9b94a311da2') in 0.001 seconds [static dependencies only]. Details - ImportResultOutputID=cec106fab811c4da0d353d131fe12b6a DependenciesID=858e02c9a92723f1800948b6bd80a3d9 StaticDependenciesID=4bc3e98c35f0d47afa4da95fae401697 
+Importing 'GUID: 51d2a3992300f4fd592bad22721bf6da - Path: Assets/_Project/Stereo/Generated/Hand Ray.mat' with importer (NativeFormatImporter)
+Imported 'GUID: 51d2a3992300f4fd592bad22721bf6da' -> (Import Result ID: 'b7ce84a8ce5992e6e47a50bf4ca3eb02') in 0.001 seconds [static dependencies only]. Details - ImportResultOutputID=af165a001aa4bed99e670d5f4c4a0518 DependenciesID=099c0a9262d677535df9756a43fcd703 StaticDependenciesID=29404a6ecc64ce290233440c5b22242a 
+Importing 'GUID: 9811b953567714ef9bfee18ac36d23ea - Path: Assets/_Project/Stereo/Generated/Hand Joint.mat' with importer (NativeFormatImporter)
+Imported 'GUID: 9811b953567714ef9bfee18ac36d23ea' -> (Import Result ID: '6a2037831ecf8323ec8a771090e09293') in 0.000 seconds [static dependencies only]. Details - ImportResultOutputID=b6a11619e6f5592ffc2ad0af64c70c06 DependenciesID=3c051ae89853e477d2a942acb86cd0c3 StaticDependenciesID=33b8d5c4a4d4679429147ea12fcfcc38 
+Importing 'GUID: 0fcae934ed12a4de1932911e8c835f67 - Path: Assets/_Project/UI/Roboto Medium SDF.asset' with importer (NativeFormatImporter)
+Imported 'GUID: 0fcae934ed12a4de1932911e8c835f67' -> (Import Result ID: 'bba240fbca1d0d76091d5d99a5063a4d') in 0.010 seconds [static dependencies only]. Details - ImportResultOutputID=ca776bfc77b37bbabfa0f5ab3e4ff8b6 DependenciesID=94a6d741fc5ff8cf8912c00e43eb6123 StaticDependenciesID=037a6cb5983640c55e71f5406d1fe276 
+Importing 'GUID: 5f2afde0b62e749f59648a84d1f70463 - Path: Assets/_Project/UI/Roboto Regular SDF.asset' with importer (NativeFormatImporter)
+Imported 'GUID: 5f2afde0b62e749f59648a84d1f70463' -> (Import Result ID: 'b37e2ff7ebd2554ad1276f5bd0b4f775') in 0.010 seconds [static dependencies only]. Details - ImportResultOutputID=8af0207eb449c664909bb5a3ec536bb0 DependenciesID=09e8afba16bd00f37a03fefdf1566004 StaticDependenciesID=e4378df80dcb9ee2ec9c1c41dc8923d7 
+Refreshing native plugins compatible for Editor in 3.55 ms, found 3 plugins.
+Asset Pipeline Refresh (id=45a0002b02471fdc3891ced883208ad3): Total: 0.111 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Importing 'GUID: cfbd819f4496b4d17b2f3ae54858952c - Path: Assets/_Project/Scenes/Core.unity' with importer (DefaultImporter)
+Imported 'GUID: cfbd819f4496b4d17b2f3ae54858952c' -> (Import Result ID: 'e87771108a5f32bd85c54695ab80aa8d') in 0.001 seconds [static dependencies only]. Details - ImportResultOutputID=94caf0c503f5bd89c8515637f52776b9 DependenciesID=8c685808a58f631e06c2bf576e8e5994 StaticDependenciesID=326b10d779f50089f3c443b07e923353 
+Refreshing native plugins compatible for Editor in 3.64 ms, found 3 plugins.
+Asset Pipeline Refresh (id=3f4d73e3be5f708d9bca283fc4941f64): Total: 0.067 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Importing 'GUID: 5e6cbd92db86f4b18aec3ed561671858 - Path: Assets/Settings/Mobile_RPAsset.asset' with importer (NativeFormatImporter)
+Imported 'GUID: 5e6cbd92db86f4b18aec3ed561671858' -> (Import Result ID: 'f1014471c334f10636513376200e8f9a') in 0.001 seconds [static dependencies only]. Details - ImportResultOutputID=87c79727be4dab5ed51d3da607f590f1 DependenciesID=2d0233f4349b66395f81a0f439c9a448 StaticDependenciesID=9f5bc01296ef0b41ac36430f5ccf4edc 
+Refreshing native plugins compatible for Editor in 3.67 ms, found 3 plugins.
+Asset Pipeline Refresh (id=3e99330634916172095d9d53419c9bca): Total: 0.026 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+1 URP assets included in build
+- Mobile_RPAsset - Assets/Settings/Mobile_RPAsset.asset
+	 - Mobile_Renderer - Assets/Settings/Mobile_Renderer.asset - UnityEngine.Rendering.Universal.UniversalRendererData
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:23)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+UnityEditor.Rendering.Universal.URPPreprocessBuild:LogIncludedAssets (System.Collections.Generic.List`1<UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset>) (at ./Library/PackageCache/com.unity.render-pipelines.universal@94ee9226e1b5/Editor/BuildProcessors/URPPreprocessBuild.cs:72)
+UnityEditor.Rendering.Universal.URPPreprocessBuild:OnPreprocessBuild (UnityEditor.Build.Reporting.BuildReport) (at ./Library/PackageCache/com.unity.render-pipelines.universal@94ee9226e1b5/Editor/BuildProcessors/URPPreprocessBuild.cs:31)
+UnityEditor.Build.BuildPipelineInterfaces/<>c__DisplayClass17_0:<OnBuildPreProcess>b__1 (UnityEditor.Build.IPreprocessBuildWithReport) (at /home/bokken/build/output/unity/unity/Editor/Mono/BuildPipeline/BuildPipelineInterfaces.cs:1132)
+UnityEditor.Build.BuildPipelineInterfaces:InvokeCallbackInterfacesPair<UnityEditor.Build.IPreprocessBuild, UnityEditor.Build.IPreprocessBuildWithReport> (System.Collections.Generic.List`1<UnityEditor.Build.IPreprocessBuild>,System.Action`1<UnityEditor.Build.IPreprocessBuild>,System.Collections.Generic.List`1<UnityEditor.Build.IPreprocessBuildWithReport>,System.Action`1<UnityEditor.Build.IPreprocessBuildWithReport>,bool) (at /home/bokken/build/output/unity/unity/Editor/Mono/BuildPipeline/BuildPipelineInterfaces.cs:1091)
+UnityEditor.Build.BuildPipelineInterfaces:OnBuildPreProcess (UnityEditor.Build.Reporting.BuildReport) (at /home/bokken/build/output/unity/unity/Editor/Mono/BuildPipeline/BuildPipelineInterfaces.cs:1123)
+UnityEditor.BuildPipeline:BuildPlayerInternal (string[],string,string,UnityEditor.BuildTargetGroup,UnityEditor.BuildTarget,int,UnityEditor.BuildOptions,string[],string[],bool)
+UnityEditor.BuildPipeline:BuildPlayer (UnityEditor.BuildPlayerOptions) (at /home/bokken/build/output/unity/unity/Editor/Mono/BuildPipeline/BuildPipeline.bindings.cs:270)
+ProjectBootstrap.StereoBuilder:BuildAndExit (string[],string,UnityEditor.BuildTarget) (at Assets/Editor/ProjectBootstrap/StereoBuilder.cs:96)
+ProjectBootstrap.StereoBuilder:BuildAndroid () (at Assets/Editor/ProjectBootstrap/StereoBuilder.cs:65)
+ProjectBootstrap.CiBuild:BuildApk () (at Assets/Editor/CiBuild.cs:47)
+
+(Filename: ./Library/PackageCache/com.unity.render-pipelines.universal@94ee9226e1b5/Editor/BuildProcessors/URPPreprocessBuild.cs Line: 72)
+
+Importing 'GUID: 0975b4c873a26d1a492d093ef61b333a - Path: Assets/XR/Temp' with importer (DefaultImporter)
+Imported 'GUID: 0975b4c873a26d1a492d093ef61b333a' -> (Import Result ID: '9b7cadd596ac8677608a104a28365c06') in 0.001 seconds [static dependencies only]. Details - ImportResultOutputID=2e3b013ceb256bb1206bd92209267baa DependenciesID=569cd2dad5fb2f7b55e3e9be7e7698c3 StaticDependenciesID=5dbe29d1037f66cae46b88b73385c3a1 
+Refreshing native plugins compatible for Editor in 3.90 ms, found 3 plugins.
+Asset Pipeline Refresh (id=e458215794e95856f92e2e00563946e3): Total: 0.064 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Refreshing native plugins compatible for Editor in 3.78 ms, found 3 plugins.
+Asset Pipeline Refresh (id=6ac251c6ad8d0074f9be611c04aa8e27): Total: 0.060 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Refreshing native plugins compatible for Editor in 3.77 ms, found 3 plugins.
+Asset Pipeline Refresh (id=589aa2eee3a0258c2a458ba752627879): Total: 0.059 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+
+Asset Pipeline Refresh (id=ad840889b89f085e9bc2c0a1c9aaefe8): Total: 1.984 seconds - Initiated by RefreshV2(NoUpdateAssetOptions)
+	(Values over 0.05ms)
+	Summary:
+		Imports: total=0 (actual=0, local cache=0, cache server=0)
+		Asset DB Process Time: managed=0 ms, native=1984 ms
+		Asset DB Callback time: managed=0 ms, native=0 ms
+		Scripting: domain reloads=0, domain reload time=0 ms, compile time=0 ms, other=0 ms
+		Project Asset Count: scripts=2174, non-scripts=4777
+		Asset File Changes: new=0, changed=0, moved=0, deleted=0
+		Scan Filter Count: 1
+	ApplyChangesToAssetFolders: 0.129ms
+	Scan: 1982.940ms
+	Collect global state as custom dependencies: 0.188ms
+	GatherAllCurrentPrimaryImportResultRevisions: 0.516ms
+	UnloadStreamsEnd: 0.132ms
+	Untracked: 0.476ms
+
+Refreshing native plugins compatible for Editor in 5.53 ms, found 3 plugins.
+Asset Pipeline Refresh (id=3e51245f600ad83619ed32a3f18a3279): Total: 0.081 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Refreshing native plugins compatible for Editor in 3.71 ms, found 3 plugins.
+Asset Pipeline Refresh (id=1aae76af25a6fb4c0b44e5272df47570): Total: 0.074 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+Refreshing native plugins compatible for Editor in 3.49 ms, found 3 plugins.
+Asset Pipeline Refresh (id=e9fc28601619d1f658d522b4345de557): Total: 0.059 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+
+Asset Pipeline Refresh (id=811a4c9d606f76719a7ae8d0d5f995d2): Total: 1.790 seconds - Initiated by RefreshV2(NoUpdateAssetOptions)
+	(Values over 0.05ms)
+	Summary:
+		Imports: total=0 (actual=0, local cache=0, cache server=0)
+		Asset DB Process Time: managed=0 ms, native=1789 ms
+		Asset DB Callback time: managed=0 ms, native=0 ms
+		Scripting: domain reloads=0, domain reload time=0 ms, compile time=0 ms, other=0 ms
+		Project Asset Count: scripts=2173, non-scripts=4777
+		Asset File Changes: new=0, changed=0, moved=0, deleted=0
+		Scan Filter Count: 1
+	ApplyChangesToAssetFolders: 0.136ms
+	Scan: 1788.487ms
+	Collect global state as custom dependencies: 0.192ms
+	GatherAllCurrentPrimaryImportResultRevisions: 0.211ms
+	UnloadStreamsEnd: 0.109ms
+	Untracked: 0.397ms
+
+DisplayProgressbar: Compiling XRReferenceImageLibrary (1 of 2)
+Low scoring image report from 'arcoreimg eval-img' for library TestReferenceImageLibrary
+Packages/com.unity.xr.arkit/Tests/Editor/Assets/TestReferenceImageLibrary.asset
+
+Google recommends a score of at least 75 for good image tracking.
+
+------
+
+- two (836f841023a445fb90a51cde5c5a5b95) | score: 60/100
+
+------
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:23)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object,UnityEngine.Object)
+UnityEngine.Debug:LogWarning (object,UnityEngine.Object)
+UnityEditor.XR.ARCore.ArCoreImg:ReportLowScoringEntries (System.Collections.Generic.List`1<UnityEditor.XR.ARCore.ArCoreImg/LowScoringImageData>,string,string) (at ./Library/PackageCache/com.unity.xr.arcore@cbc4d469ea60/Editor/ArCoreImg.cs:278)
+UnityEditor.XR.ARCore.ArCoreImg:ToInputImageListPath (UnityEngine.XR.ARSubsystems.XRReferenceImageLibrary,string) (at ./Library/PackageCache/com.unity.xr.arcore@cbc4d469ea60/Editor/ArCoreImg.cs:240)
+UnityEditor.XR.ARCore.ArCoreImg:BuildDb (UnityEngine.XR.ARSubsystems.XRReferenceImageLibrary) (at ./Library/PackageCache/com.unity.xr.arcore@cbc4d469ea60/Editor/ArCoreImg.cs:149)
+UnityEditor.XR.ARCore.ARCoreImageLibraryBuildProcessor:BuildAssets () (at ./Library/PackageCache/com.unity.xr.arcore@cbc4d469ea60/Editor/ARCoreImageLibraryBuildProcessor.cs:37)
+UnityEditor.XR.ARCore.ARCoreImageLibraryBuildProcessor:UnityEditor.Build.IPreprocessBuildWithReport.OnPreprocessBuild (UnityEditor.Build.Reporting.BuildReport) (at ./Library/PackageCache/com.unity.xr.arcore@cbc4d469ea60/Editor/ARCoreImageLibraryBuildProcessor.cs:75)
+UnityEditor.Build.BuildPipelineInterfaces/<>c__DisplayClass17_0:<OnBuildPreProcess>b__1 (UnityEditor.Build.IPreprocessBuildWithReport) (at /home/bokken/build/output/unity/unity/Editor/Mono/BuildPipeline/BuildPipelineInterfaces.cs:1132)
+UnityEditor.Build.BuildPipelineInterfaces:InvokeCallbackInterfacesPair<UnityEditor.Build.IPreprocessBuild, UnityEditor.Build.IPreprocessBuildWithReport> (System.Collections.Generic.List`1<UnityEditor.Build.IPreprocessBuild>,System.Action`1<UnityEditor.Build.IPreprocessBuild>,System.Collections.Generic.List`1<UnityEditor.Build.IPreprocessBuildWithReport>,System.Action`1<UnityEditor.Build.IPreprocessBuildWithReport>,bool) (at /home/bokken/build/output/unity/unity/Editor/Mono/BuildPipeline/BuildPipelineInterfaces.cs:1091)
+UnityEditor.Build.BuildPipelineInterfaces:OnBuildPreProcess (UnityEditor.Build.Reporting.BuildReport) (at /home/bokken/build/output/unity/unity/Editor/Mono/BuildPipeline/BuildPipelineInterfaces.cs:1123)
+UnityEditor.BuildPipeline:BuildPlayerInternal (string[],string,string,UnityEditor.BuildTargetGroup,UnityEditor.BuildTarget,int,UnityEditor.BuildOptions,string[],string[],bool)
+UnityEditor.BuildPipeline:BuildPlayer (UnityEditor.BuildPlayerOptions) (at /home/bokken/build/output/unity/unity/Editor/Mono/BuildPipeline/BuildPipeline.bindings.cs:270)
+ProjectBootstrap.StereoBuilder:BuildAndExit (string[],string,UnityEditor.BuildTarget) (at Assets/Editor/ProjectBootstrap/StereoBuilder.cs:96)
+ProjectBootstrap.StereoBuilder:BuildAndroid () (at Assets/Editor/ProjectBootstrap/StereoBuilder.cs:65)
+ProjectBootstrap.CiBuild:BuildApk () (at Assets/Editor/CiBuild.cs:47)
+
+(Filename: ./Library/PackageCache/com.unity.xr.arcore@cbc4d469ea60/Editor/ArCoreImg.cs Line: 278)
+
+DisplayProgressbar: Compiling XRReferenceImageLibrary (2 of 2)
+Low scoring image report from 'arcoreimg eval-img' for library TestReferenceImageLibrary
+Packages/com.unity.xr.arcore/Tests/Editor/Assets/TestReferenceImageLibrary.asset
+
+Google recommends a score of at least 75 for good image tracking.
+
+------
+
+- two (8dd14bbaaac94e8483f6640fc7d8f6a9) | score: 60/100
+
+------
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:23)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object,UnityEngine.Object)
+UnityEngine.Debug:LogWarning (object,UnityEngine.Object)
+UnityEditor.XR.ARCore.ArCoreImg:ReportLowScoringEntries (System.Collections.Generic.List`1<UnityEditor.XR.ARCore.ArCoreImg/LowScoringImageData>,string,string) (at ./Library/PackageCache/com.unity.xr.arcore@cbc4d469ea60/Editor/ArCoreImg.cs:278)
+UnityEditor.XR.ARCore.ArCoreImg:ToInputImageListPath (UnityEngine.XR.ARSubsystems.XRReferenceImageLibrary,string) (at ./Library/PackageCache/com.unity.xr.arcore@cbc4d469ea60/Editor/ArCoreImg.cs:240)
+UnityEditor.XR.ARCore.ArCoreImg:BuildDb (UnityEngine.XR.ARSubsystems.XRReferenceImageLibrary) (at ./Library/PackageCache/com.unity.xr.arcore@cbc4d469ea60/Editor/ArCoreImg.cs:149)
+UnityEditor.XR.ARCore.ARCoreImageLibraryBuildProcessor:BuildAssets () (at ./Library/PackageCache/com.unity.xr.arcore@cbc4d469ea60/Editor/ARCoreImageLibraryBuildProcessor.cs:37)
+UnityEditor.XR.ARCore.ARCoreImageLibraryBuildProcessor:UnityEditor.Build.IPreprocessBuildWithReport.OnPreprocessBuild (UnityEditor.Build.Reporting.BuildReport) (at ./Library/PackageCache/com.unity.xr.arcore@cbc4d469ea60/Editor/ARCoreImageLibraryBuildProcessor.cs:75)
+UnityEditor.Build.BuildPipelineInterfaces/<>c__DisplayClass17_0:<OnBuildPreProcess>b__1 (UnityEditor.Build.IPreprocessBuildWithReport) (at /home/bokken/build/output/unity/unity/Editor/Mono/BuildPipeline/BuildPipelineInterfaces.cs:1132)
+UnityEditor.Build.BuildPipelineInterfaces:InvokeCallbackInterfacesPair<UnityEditor.Build.IPreprocessBuild, UnityEditor.Build.IPreprocessBuildWithReport> (System.Collections.Generic.List`1<UnityEditor.Build.IPreprocessBuild>,System.Action`1<UnityEditor.Build.IPreprocessBuild>,System.Collections.Generic.List`1<UnityEditor.Build.IPreprocessBuildWithReport>,System.Action`1<UnityEditor.Build.IPreprocessBuildWithReport>,bool) (at /home/bokken/build/output/unity/unity/Editor/Mono/BuildPipeline/BuildPipelineInterfaces.cs:1091)
+UnityEditor.Build.BuildPipelineInterfaces:OnBuildPreProcess (UnityEditor.Build.Reporting.BuildReport) (at /home/bokken/build/output/unity/unity/Editor/Mono/BuildPipeline/BuildPipelineInterfaces.cs:1123)
+UnityEditor.BuildPipeline:BuildPlayerInternal (string[],string,string,UnityEditor.BuildTargetGroup,UnityEditor.BuildTarget,int,UnityEditor.BuildOptions,string[],string[],bool)
+UnityEditor.BuildPipeline:BuildPlayer (UnityEditor.BuildPlayerOptions) (at /home/bokken/build/output/unity/unity/Editor/Mono/BuildPipeline/BuildPipeline.bindings.cs:270)
+ProjectBootstrap.StereoBuilder:BuildAndExit (string[],string,UnityEditor.BuildTarget) (at Assets/Editor/ProjectBootstrap/StereoBuilder.cs:96)
+ProjectBootstrap.StereoBuilder:BuildAndroid () (at Assets/Editor/ProjectBootstrap/StereoBuilder.cs:65)
+ProjectBootstrap.CiBuild:BuildApk () (at Assets/Editor/CiBuild.cs:47)
+
+(Filename: ./Library/PackageCache/com.unity.xr.arcore@cbc4d469ea60/Editor/ArCoreImg.cs Line: 278)
+
+Importing 'GUID: 5e6cbd92db86f4b18aec3ed561671858 - Path: Assets/Settings/Mobile_RPAsset.asset' with importer (NativeFormatImporter)
+Imported 'GUID: 5e6cbd92db86f4b18aec3ed561671858' -> (Import Result ID: 'f1014471c334f10636513376200e8f9a') in 0.001 seconds [static dependencies only]. Details - ImportResultOutputID=87c79727be4dab5ed51d3da607f590f1 DependenciesID=2d0233f4349b66395f81a0f439c9a448 StaticDependenciesID=9f5bc01296ef0b41ac36430f5ccf4edc 
+Refreshing native plugins compatible for Editor in 3.46 ms, found 3 plugins.
+Asset Pipeline Refresh (id=fde9bcbf66a74a3a2b22e5022ac4ce86): Total: 0.026 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+AcceleratorClientConnectionCallback - disconnected - :0
+Importing 'GUID: 00000000000000004000000000000000 - Path: ProjectSettings/ProjectSettings.asset' with importer (LibraryAssetImporter)
+Imported 'GUID: 00000000000000004000000000000000' -> (Import Result ID: '3413d4aa1197746e348ad636585d9a16') in 0.001 seconds [static dependencies only]. Details - ImportResultOutputID=054c890a8f4b6dddbea933bc5e4b7df4 DependenciesID=b2cd832a874d14222e489b821cce753e StaticDependenciesID=ecee9bbca8bcbd8a4ab20e15c4cd4824 
+Importing 'GUID: 00000000000000006100000000000000 - Path: ProjectSettings/GraphicsSettings.asset' with importer (LibraryAssetImporter)
+Imported 'GUID: 00000000000000006100000000000000' -> (Import Result ID: 'd53148c0f9c9de24c4eb7c618928336c') in 0.001 seconds [static dependencies only]. Details - ImportResultOutputID=a2dcdb8bc9503711bc0f2e2d72cfd36c DependenciesID=8cd8feeeb261d459bcf82806af798d0c StaticDependenciesID=e3bd632f061e18819a1b0d1af24fe8c0 
+Importing 'GUID: e140c899c3d924dff8f41e493d33d3a7 - Path: Packages/com.unity.xr.arkit/Tests/Editor/Assets/TestReferenceImageLibrary.asset' with importer (NativeFormatImporter)
+Imported 'GUID: e140c899c3d924dff8f41e493d33d3a7' -> (Import Result ID: '6667abf2f9d172338027102f1cd6d9df') in 0.001 seconds [static dependencies only]. Details - ImportResultOutputID=b0dd915e722881d93bb6db9fe7d73f6e DependenciesID=e0d7ca9f2395b063d35d0a7ba0f1568d StaticDependenciesID=fc9277c98b6664970b16b64395209ff6 
+Importing 'GUID: c33765148919746ecbe8e10cceb19107 - Path: Packages/com.unity.xr.arcore/Tests/Editor/Assets/TestReferenceImageLibrary.asset' with importer (NativeFormatImporter)
+Imported 'GUID: c33765148919746ecbe8e10cceb19107' -> (Import Result ID: '01c2b0831d594a654060b7159fac7ab8') in 0.001 seconds [static dependencies only]. Details - ImportResultOutputID=4498d377cc3fa1eadbdb4f994da9fd7b DependenciesID=c1d0081a6b9825bc7f9d66993fe9ccac StaticDependenciesID=70141f10fab5b602ec2df82e837d3ee0 
+Importing 'GUID: 18dc0cd2c080841dea60987a38ce93fa - Path: Assets/Settings/UniversalRenderPipelineGlobalSettings.asset' with importer (NativeFormatImporter)
+Imported 'GUID: 18dc0cd2c080841dea60987a38ce93fa' -> (Import Result ID: 'e5a5b36ed996efc6eaa236de3696a66f') in 0.001 seconds [static dependencies only]. Details - ImportResultOutputID=ac92a3253360087966dd104547753906 DependenciesID=81b749b164c341fb834b1db38265cf2d StaticDependenciesID=df6528ad0ae52f4c17bb76448a242916 
+Importing 'GUID: 0fcae934ed12a4de1932911e8c835f67 - Path: Assets/_Project/UI/Roboto Medium SDF.asset' with importer (NativeFormatImporter)
+Imported 'GUID: 0fcae934ed12a4de1932911e8c835f67' -> (Import Result ID: 'd09eeea025103af2eebf1eaa3f2f003a') in 0.006 seconds [static dependencies only]. Details - ImportResultOutputID=ca776bfc77b37bbabfa0f5ab3e4ff8b6 DependenciesID=7ee2195bb8540ae88208d97bce3c8d10 StaticDependenciesID=21f7c82b50c4c3b4d265fd75ddd7146e 
+Importing 'GUID: 5f2afde0b62e749f59648a84d1f70463 - Path: Assets/_Project/UI/Roboto Regular SDF.asset' with importer (NativeFormatImporter)
+Imported 'GUID: 5f2afde0b62e749f59648a84d1f70463' -> (Import Result ID: 'a07829ba9bf897b4001b982327ce5d5d') in 0.006 seconds [static dependencies only]. Details - ImportResultOutputID=8af0207eb449c664909bb5a3ec536bb0 DependenciesID=e016d2f6677d9e8acf056f2394f2f0dd StaticDependenciesID=0fab8b954c6229dea4d410728b4fa316 
+The following asset(s) located in immutable packages were unexpectedly altered. Making changes to immutable packages isn't recommended because the changes can be lost without any warning during Package Manager operations.
+  Packages/com.unity.xr.arcore/Tests/Editor/Assets/TestReferenceImageLibrary.asset
+  Packages/com.unity.xr.arkit/Tests/Editor/Assets/TestReferenceImageLibrary.asset
+Refreshing native plugins compatible for Editor in 3.50 ms, found 3 plugins.
+Asset Pipeline Refresh (id=56e2b09662071bc778b80d91a6622841): Total: 0.104 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+DisplayProgressbar: Checking prerequisites
+Reporting tool paths:
+ JDK: '/opt/unity/Editor/Data/PlaybackEngines/AndroidPlayer/OpenJDK'
+ Android SDK: '/opt/unity/Editor/Data/PlaybackEngines/AndroidPlayer/SDK'
+ Android NDK: '/opt/unity/Editor/Data/PlaybackEngines/AndroidPlayer/NDK'
+ Gradle: '/opt/unity/Editor/Data/PlaybackEngines/AndroidPlayer/Tools/gradle' (Gradle Version: '9.3.1' Android Plugin Version: '9.1.1')
+Android PostProcess task "Checking prerequisites" took 29.2721 ms
+DisplayProgressbar: Detect Java Development Kit (JDK)
+Android PostProcess task "Detect Java Development Kit (JDK)" took 2.6391 ms
+DisplayProgressbar: Detecting Android SDK
+AndroidSDKTools:
+
+	root          : /opt/unity/Editor/Data/PlaybackEngines/AndroidPlayer/SDK
+	cmdline-tools : /opt/unity/Editor/Data/PlaybackEngines/AndroidPlayer/SDK/cmdline-tools/16.0
+	platform-tools: /opt/unity/Editor/Data/PlaybackEngines/AndroidPlayer/SDK/platform-tools
+	build-tools   : /opt/unity/Editor/Data/PlaybackEngines/AndroidPlayer/SDK/build-tools/36.0.0
+
+	adb           : /opt/unity/Editor/Data/PlaybackEngines/AndroidPlayer/SDK/platform-tools/adb
+
+Android PostProcess task "Detecting Android SDK" took 3271.3149 ms
+DisplayProgressbar: Detect Android NDK
+Android PostProcess task "Detect Android NDK" took 0.6861 ms
+Android PostProcess task "Trying to find a suitable Android device" took 0.4083 ms
+DisplayProgressbar: Check resources
+Android PostProcess task "Check resources" took 0.1406 ms
+DisplayProgressbar: Check Android Player Settings
+Android PostProcess task "Check Android Player Settings" took 0.8231 ms
+AutoLocale: current locale expects 'C' but got 'en_US.UTF-8'Launched and connected shader compiler UnityShaderCompiler after 0.19 seconds
+Starting: /opt/unity/Editor/Data/Tools/BuildPipeline/bee_backend --ipc --defer-dag-verification --dagfile="Library/Bee/1300b0aESkipCompile.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssembliesAndTypeDB
+WorkingDir: /workspace/CardboardXR-ChromaPassthrough
+DisplayProgressbar: Compiling Scripts
+ExitCode: 0 Duration: 0s188ms
+*** Tundra build success (0.13 seconds), 0 items updated, 3 evaluated
+Total cache size 120280380
+Total cache size after purge 120280380, took 00:00:00.0504888
+
+Asset Pipeline Refresh (id=a52a81683de6112abbdbeeb892e1c0a5): Total: 1.168 seconds - Initiated by RefreshV2(NoUpdateAssetOptions)
+	(Values over 0.05ms)
+	Summary:
+		Imports: total=0 (actual=0, local cache=0, cache server=0)
+		Asset DB Process Time: managed=0 ms, native=1168 ms
+		Asset DB Callback time: managed=0 ms, native=0 ms
+		Scripting: domain reloads=0, domain reload time=0 ms, compile time=0 ms, other=0 ms
+		Project Asset Count: scripts=2173, non-scripts=4777
+		Asset File Changes: new=0, changed=0, moved=0, deleted=0
+		Scan Filter Count: 1
+	ApplyChangesToAssetFolders: 0.099ms
+	Scan: 1167.330ms
+	Collect global state as custom dependencies: 0.149ms
+	GatherAllCurrentPrimaryImportResultRevisions: 0.319ms
+	UnloadStreamsEnd: 0.090ms
+	Untracked: 0.390ms
+
+[ScriptCompilation] Requested script compilation because: Recompiling scripts for player build.
+BuildPlayer: start building target 13
+Starting: /opt/unity/Editor/Data/Tools/BuildPipeline/bee_backend --ipc --defer-dag-verification --dagfile="Library/Bee/1300b0aP.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssembliesAndTypeDB
+WorkingDir: /workspace/CardboardXR-ChromaPassthrough
+ExitCode: 4 Duration: 0s285ms
+Rebuilding DAG because FileSignature timestamp changed: Library/Bee/1300b0aP-inputdata.json
+*** Tundra requires additional run (0.23 seconds), 0 items updated, 0 evaluated
+Starting: /opt/unity/Editor/Data/DotNetSdk/dotnet "/opt/unity/Editor/Data/Tools/BuildPipeline/ScriptCompilationBuildProgram.exe" "Library/Bee/1300b0aP.dag.json" "Library/Bee/1300b0aP-inputdata.json" "Library/Bee/buildprogram0.traceevents"
+WorkingDir: /workspace/CardboardXR-ChromaPassthrough
+ExitCode: 0 Duration: 1s328ms
+Starting: /opt/unity/Editor/Data/Tools/BuildPipeline/bee_backend --ipc --defer-dag-verification --dagfile="Library/Bee/1300b0aP.dag" --continue-on-failure --dagfilejson="Library/Bee/1300b0aP.dag.json" --profile="Library/Bee/backend2.traceevents" ScriptAssembliesAndTypeDB
+WorkingDir: /workspace/CardboardXR-ChromaPassthrough
+warn: Unity.ILPP.Runner.PostProcessingAssemblyLoadContext[0]
+      Assembly system.runtime.interopservices.windowsruntime has duplicate hint path. Ignoring "/opt/unity/Editor/Data/UnityReferenceAssemblies/unity-4.8-api/Facades/System.Runtime.InteropServices.WindowsRuntime.dll" in favor of "/opt/unity/Editor/Data/NetStandard/Extensions/2.0.0/System.Runtime.InteropServices.WindowsRuntime.dll"
+warn: Unity.ILPP.Runner.PostProcessingAssemblyLoadContext[0]
+      Assembly system.componentmodel.composition has duplicate hint path. Ignoring "/opt/unity/Editor/Data/UnityReferenceAssemblies/unity-4.8-api/System.ComponentModel.Composition.dll" in favor of "/opt/unity/Editor/Data/NetStandard/compat/2.1.0/shims/netfx/System.ComponentModel.Composition.dll"

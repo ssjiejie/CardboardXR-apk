@@ -1,0 +1,69 @@
+# Builds an APK when a version tag (v0.0.1) is pushed, or when run by hand, and uploads it as a
+# workflow artifact (attaching it to the tag's release as well). Signed with Unity's debug key, which
+# is what an unsigned local build gets too: installable, but an update has to be signed with the same
+# key, so keep this workflow (or your own keystore) for updates.
+#
+# One-time setup: repo Settings > Secrets and variables > Actions, add UNITY_LICENSE (the contents of
+# a Unity .ulf), UNITY_EMAIL and UNITY_PASSWORD. See https://game.ci/docs/github/activation
+#
+# The build method is the one Tools/release_android.sh uses, so CI and a local build produce the same
+# app: ProjectBootstrap.StereoBuilder.BuildAndroid, which generates the scenes and then builds
+# Builds/CardboardXR.apk.
+#
+# Third-party actions are pinned to full commit SHAs (the comment is the tag it was resolved from).
+name: Android APK
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # needed to add the .apk to the release
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      # game-ci runs Unity in Docker and only passes its own env vars in, so write the version into
+      # ProjectSettings directly. The checkout is thrown away after the run; the tag pattern above
+      # guarantees three numbers.
+      - name: Set version from tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          sed -i -E "s/^( *)bundleVersion: .*/\1bundleVersion: $VERSION/" ProjectSettings/ProjectSettings.asset
+          grep -q "^ *bundleVersion: $VERSION\$" ProjectSettings/ProjectSettings.asset || { echo "::error::bundleVersion not set"; exit 1; }
+
+      - uses: game-ci/unity-builder@4423ee75828dff56037d1d1cfdac6b68e3a6ba00 # v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          unityVersion: 6000.6.8f1
+          targetPlatform: Android
+          buildMethod: ProjectBootstrap.StereoBuilder.BuildAndroid
+          allowDirtyBuild: true
+
+      # The APK is written to Builds/CardboardXR.apk (see StereoBuilder.AndroidApk).
+      - name: Check the APK is there
+        run: |
+          ls -lh Builds/*.apk
+          test -s Builds/CardboardXR.apk || { echo "::error::APK missing"; exit 1; }
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: CardboardXR-apk
+          path: Builds/*.apk
+          if-no-files-found: error
+
+      # Adds the .apk to the tag's release, creating it if missing. No body or generate_release_notes
+      # is passed, so notes on a release made by hand are left alone.
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        with:
+          files: Builds/*.apk
