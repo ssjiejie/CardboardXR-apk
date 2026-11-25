@@ -22,6 +22,11 @@ namespace ProjectBootstrap
         // while the rest of the 3D scene still draws. GLES3 is what the official 1.0.0 build ships
         // and what every Android video/AR path here is proven against.
         //
+        // Code generation stays OptimizeSize. OptimizeSpeed was tried and the IL2CPP link step ran
+        // the runner out of disk (libil2cpp.dbg.so is tens of GB of intermediate), so it is not an
+        // option on this CI. It is also not needed: the black frame is a graphics-API problem, not a
+        // missing-generic problem -- video playback takes no generics at all and it was black too.
+        //
         // The size fingerprint is what matters here. The official 1.0.0 build ships a 85-87 MB
         // libil2cpp.so; ours came out at 49 MB even with stripping disabled, and every camera view
         // drew black while ARCore still reported tracking. The gap was not stripping: it is IL2CPP
@@ -40,7 +45,7 @@ namespace ProjectBootstrap
                 new[] { GraphicsDeviceType.OpenGLES3 });
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.Android, ManagedStrippingLevel.Disabled);
-            PlayerSettings.SetIl2CppCodeGeneration(NamedBuildTarget.Android, Il2CppCodeGeneration.OptimizeSpeed);
+            PlayerSettings.SetIl2CppCodeGeneration(NamedBuildTarget.Android, Il2CppCodeGeneration.OptimizeSize);
             PlayerSettings.stripEngineCode = false;
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
             // Higher than the official 1.0.0 build (10000) so this installs over it instead of failing
