@@ -12,8 +12,15 @@ namespace ProjectBootstrap
     public static class CiBuild
     {
         // ARCore needs arm64, which only the IL2CPP backend produces, so Mono is not an option.
-        // Vulkan comes first because that is what the ARCore release notes require; GLES3 stays as
-        // the fallback for devices that have no Vulkan driver.
+        //
+        // OpenGLES3 only, deliberately. The 32-bit Mono build of this same project had a working
+        // picture and used GLES3 alone; the 64-bit builds that came out all-black were the ones
+        // listing Vulkan first. Video is the tell: the video player, the AR camera texture and the
+        // passthrough quad all draw black, and none of them share code with each other -- they share
+        // the graphics API. On this device Vulkan comes up but hands back no usable surface for
+        // external/OES textures, so everything that samples a camera or a video frame renders black
+        // while the rest of the 3D scene still draws. GLES3 is what the official 1.0.0 build ships
+        // and what every Android video/AR path here is proven against.
         //
         // The size fingerprint is what matters here. The official 1.0.0 build ships a 85-87 MB
         // libil2cpp.so; ours came out at 49 MB even with stripping disabled, and every camera view
@@ -30,7 +37,7 @@ namespace ProjectBootstrap
         {
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android, false);
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android,
-                new[] { GraphicsDeviceType.Vulkan, GraphicsDeviceType.OpenGLES3 });
+                new[] { GraphicsDeviceType.OpenGLES3 });
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.SetManagedStrippingLevel(NamedBuildTarget.Android, ManagedStrippingLevel.Disabled);
             PlayerSettings.SetIl2CppCodeGeneration(NamedBuildTarget.Android, Il2CppCodeGeneration.OptimizeSpeed);
