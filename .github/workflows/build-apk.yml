@@ -28,6 +28,9 @@ jobs:
       # Unity 在无显卡容器里启动时需要一块足够大的 /dev/shm（共享内存）。Docker 默认只给 64 MB，
       # 上一次构建就是因为 "Requested 1073741824 bytes, but only 67108864 bytes available"
       # 直接 abort。这里给到 2 GB，并把 Unity 的退出码透出到宿主，避免失败被吞成绿色。
+      #
+      # Configure 先跑一遍：图形 API（Vulkan 优先，GLES3 兜底）和剥离等级都要写进 ProjectSettings
+      # 才生效，而改后端会让 Unity 重载脚本、打断当前 -executeMethod，所以只能是两个进程。
       - name: Build APK
         run: |
           docker run --rm \
@@ -42,6 +45,16 @@ jobs:
               /opt/unity/Editor/Data/Resources/Licensing/Client/Unity.Licensing.Client > /tmp/lic.log 2>&1 &
               sleep 10
               tail -20 /tmp/lic.log
+
+              /opt/unity/Editor/Unity -batchmode -nographics -quit \
+                -projectPath /project \
+                -executeMethod ProjectBootstrap.CiBuild.Configure \
+                -logFile /project/configure.log
+              cfg=$?
+              echo "CONFIGURE_EXIT=$cfg"
+              grep -a "\[CiBuild\]" /project/configure.log || true
+              [ $cfg -ne 0 ] && exit $cfg
+
               /opt/unity/Editor/Unity -batchmode -nographics -quit \
                 -projectPath /project \
                 -executeMethod ProjectBootstrap.CiBuild.BuildApk \
@@ -50,6 +63,10 @@ jobs:
               echo "UNITY_EXIT=$rc"
               exit $rc
             '
+
+      - name: Configure log tail
+        if: always()
+        run: grep -a -E "\[CiBuild\]|Error" configure.log | tail -40 2>/dev/null || echo "no configure.log"
 
       - name: Build log tail
         if: always()
