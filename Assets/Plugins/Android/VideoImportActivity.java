@@ -83,10 +83,10 @@ public class VideoImportActivity extends Activity
         // Never overwrite one already there: add a number before the extension.
         File target = new File(folder, name);
         int dot = name.lastIndexOf('.');
-        String base = dot > 0 ? name.substring(0, dot) : name;
+        String stem = dot > 0 ? name.substring(0, dot) : name;
         String extension = dot > 0 ? name.substring(dot) : "";
         for (int copy = 1; target.exists(); copy++)
-            target = new File(folder, base + " (" + copy + ")" + extension);
+            target = new File(folder, stem + " (" + copy + ")" + extension);
 
         InputStream input = null;
         OutputStream output = null;
