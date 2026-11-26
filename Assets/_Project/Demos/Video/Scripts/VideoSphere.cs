@@ -39,6 +39,15 @@ namespace CardboardXR.Demos.Video
         Texture m_Texture;
         Vector2 m_TextureScale = Vector2.one;
         Vector2 m_TextureOffset;
+        // 1 is the sphere at its authored radius; more than 1 pulls it closer to the eye, so the
+        // picture fills more of the view, less than 1 pushes it away.
+        float m_Zoom = 1f;
+
+        // The most the picture can be enlarged and shrunk, so it can't be lost by zooming.
+        public const float MinZoom = 0.5f;
+        public const float MaxZoom = 3f;
+
+        public float Zoom => m_Zoom;
 
         // A tap or pinch with the gaze on the video, rather than on a panel.
         public event Action Clicked;
@@ -126,6 +135,19 @@ namespace CardboardXR.Demos.Video
                 PutTextureOn(material);
             }
             Debug.Log($"[Video] Green screen {(on ? "on" : "off")}");
+        }
+
+        // Pulls the picture closer (zoom > 1) or pushes it away (zoom < 1). The sphere is drawn
+        // around the head, so scaling the transform is the same as changing its radius: a smaller
+        // sphere shows less of the frame, which reads as zooming in. The click surface is scaled
+        // back the other way, so a tap still reaches the video however far it was zoomed.
+        public void SetZoom(float zoom)
+        {
+            m_Zoom = Mathf.Clamp(zoom, MinZoom, MaxZoom);
+            transform.localScale = Vector3.one / m_Zoom;
+            if (m_ClickSurface != null)
+                m_ClickSurface.transform.localScale = Vector3.one * m_Zoom;
+            Debug.Log($"[Video] Zoom {m_Zoom:F2}x");
         }
 
         void PutTextureOn(Material material)
