@@ -21,17 +21,33 @@ namespace CardboardXR.Demos.Video
                  "(GazePointer's max distance, 20 m) so a tap on it registers.")]
         [SerializeField] float m_Radius = 15f;
 
+        // The green-screen shader, in Resources so neither the scene nor a prefab has to hold it.
+        const string k_ChromaShaderName = "ChromaKey";
+        // How much green is cut when the key is on: high enough to remove a lit green screen, low
+        // enough to leave skin and dark clothes alone.
+        const float k_ChromaStrength = 0.55f;
+        static readonly int k_ChromaKeyId = Shader.PropertyToID("_ChromaKey");
+
         readonly MeshRenderer[] m_Eyes = new MeshRenderer[2];
         readonly Material[] m_Materials = new Material[2];
         Mesh m_Full;
         Mesh m_Half;
         GameObject m_ClickSurface;
+        Shader m_ChromaShader;
+        bool m_Chroma;
+        // What Show last drew, so switching the shader can put the frame back on the new material.
+        Texture m_Texture;
+        Vector2 m_TextureScale = Vector2.one;
+        Vector2 m_TextureOffset;
 
         // A tap or pinch with the gaze on the video, rather than on a panel.
         public event Action Clicked;
 
         void Awake()
         {
+            m_ChromaShader = Resources.Load<Shader>(k_ChromaShaderName);
+            if (m_ChromaShader == null)
+                Debug.LogWarning($"[Video] Resources/{k_ChromaShaderName}.shader is missing; the green screen can't be cut out.");
             m_Full = BuildMesh(Projection.Full360, m_Radius);
             m_Half = BuildMesh(Projection.Half180, m_Radius);
             for (var eye = 0; eye < 2; eye++)
@@ -74,6 +90,7 @@ namespace CardboardXR.Demos.Video
         // Shows the texture in the format, or hides the sphere for null.
         public void Show(Texture texture, VideoFormat format)
         {
+            m_Texture = texture;
             m_ClickSurface.SetActive(texture != null);
             for (var eye = 0; eye < 2; eye++)
             {
@@ -86,10 +103,39 @@ namespace CardboardXR.Demos.Video
                     : eye == 0 ? Stereo.StereoRig.LeftEyeOnlyLayer : Stereo.StereoRig.RightEyeOnlyLayer;
                 m_Eyes[eye].GetComponent<MeshFilter>().sharedMesh = format.Projection == Projection.Full360 ? m_Full : m_Half;
                 var rect = format.EyeRect(eye);
-                m_Materials[eye].mainTexture = texture;
-                m_Materials[eye].mainTextureScale = rect.size;
-                m_Materials[eye].mainTextureOffset = rect.position;
+                m_TextureScale = rect.size;
+                m_TextureOffset = rect.position;
+                PutTextureOn(m_Materials[eye]);
             }
+        }
+
+        // Cuts the green out of the video, or puts it back. Safe to call before a video plays, and
+        // while one does: the frame already on screen is moved onto the other shader.
+        public void SetChromaKey(bool on)
+        {
+            if (m_Chroma == on)
+                return;
+            if (on && m_ChromaShader == null)
+                return;
+            m_Chroma = on;
+            foreach (var material in m_Materials)
+            {
+                material.shader = on ? m_ChromaShader : m_Material.shader;
+                if (on)
+                    material.SetFloat(k_ChromaKeyId, k_ChromaStrength);
+                PutTextureOn(material);
+            }
+            Debug.Log($"[Video] Green screen {(on ? "on" : "off")}");
+        }
+
+        void PutTextureOn(Material material)
+        {
+            if (m_Texture == null)
+                return;
+            // mainTexture is the shader's [MainTexture]: _BaseMap on both URP/Unlit and ChromaKey.
+            material.mainTexture = m_Texture;
+            material.mainTextureScale = m_TextureScale;
+            material.mainTextureOffset = m_TextureOffset;
         }
 
         // The texture coordinate for a direction given as longitude (0 ahead, positive to the right)
