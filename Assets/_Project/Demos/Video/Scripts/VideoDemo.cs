@@ -56,6 +56,10 @@ namespace CardboardXR.Demos.Video
         TMP_Text m_PageLabel;
         M3Button m_PreviousPage;
         M3Button m_NextPage;
+        M3Button m_GreenButton;
+        M3Button m_EyesButton;
+        bool m_Green;
+        bool m_StereoEyes;
         TMP_Text m_EmptyMessage;
         readonly List<(M3Button item, TMP_Text supporting)> m_EntryButtons = new();
         int m_Page;
@@ -328,7 +332,7 @@ namespace CardboardXR.Demos.Video
 
         // Both pages share one Material panel, k_PanelDistance away, sized to the page showing. Sizes in dp.
         static readonly Vector2 k_LibrarySize = new(600f, 536f);
-        static readonly Vector2 k_ControlsSize = new(600f, 352f);
+        static readonly Vector2 k_ControlsSize = new(600f, 440f);
 
         void BuildPanel()
         {
@@ -389,6 +393,30 @@ namespace CardboardXR.Demos.Video
             M3.Button("Next video", m_ControlsPage, "Next", M3Button.Variant.Tonal, new Vector2(0f, -128f), Next, "skip_next", width);
             M3.Button("Format", m_ControlsPage, "Format", M3Button.Variant.Tonal, new Vector2(176f, -128f), CycleFormat, "aspect_ratio",
                 width);
+
+            // Green screen: cuts the green out of the video, so the room the camera sees shows through.
+            // Stereo eyes: keeps each eye's own view of that room instead of merging them, so the
+            // image sits at the camera's depth rather than flat on the viewer's face.
+            m_GreenButton = M3.Button("Green screen", m_ControlsPage, "Green", M3Button.Variant.Tonal,
+                new Vector2(-88f, -204f), ToggleGreen, "auto_fix_high", 168f);
+            m_EyesButton = M3.Button("Stereo eyes", m_ControlsPage, "Eyes", M3Button.Variant.Tonal,
+                new Vector2(88f, -204f), ToggleStereoEyes, "visibility", 168f);
+        }
+
+        void ToggleGreen()
+        {
+            m_Green = !m_Green;
+            m_Sphere.SetChromaKey(m_Green);
+            m_GreenButton.Selected = m_Green;
+        }
+
+        void ToggleStereoEyes()
+        {
+            m_StereoEyes = !m_StereoEyes;
+            if (m_Core != null && m_Core.Passthrough != null)
+                m_Core.Passthrough.StereoEyes = m_StereoEyes;
+            m_EyesButton.Selected = m_StereoEyes;
+            Debug.Log($"[Video] Stereo eyes {(m_StereoEyes ? "on" : "off")}");
         }
 
         void Page(int step)
