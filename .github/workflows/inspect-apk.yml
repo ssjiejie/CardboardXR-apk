@@ -1,0 +1,64 @@
+name: Inspect APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Build run id to inspect
+        required: true
+        default: "45793712888"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Fetch artifact
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh run download "${{ inputs.run_id }}" -R "$GITHUB_REPOSITORY" -n CardboardXR-apk -D art
+          APK=$(find art -name '*.apk' | head -1)
+          echo "APK=$APK"
+          mkdir -p x && unzip -o -q "$APK" -d x
+          echo "=== dex files ==="
+          ls -l x/*.dex
+
+      - name: Which Unity player activity is in the dex
+        run: |
+          for f in x/classes*.dex; do
+            echo "--- $f"
+            strings "$f" | grep -oE "com/unity3d/player/[A-Za-z0-9_]*Activity" | sort -u
+          done
+          echo "=== native libraries ==="
+          ls -l x/lib/arm64-v8a | head -30
+
+      - name: Manifest activities and features
+        run: |
+          pip install -q pyaxmlparser
+          APK=$(find art -name '*.apk' | head -1)
+          python3 - "$APK" <<'PY'
+          import sys
+          from pyaxmlparser import APK
+          a = APK(sys.argv[1])
+          print('activities:')
+          for act in a.get_activities():
+              print('  ', act)
+          print('services:')
+          for s in a.get_services():
+              print('  ', s)
+          print('providers:')
+          for p in a.get_providers():
+              print('  ', p)
+          print('native code:', a.get_native_code())
+          print('main activity:', a.get_main_activity())
+          print('features:')
+          from lxml import etree
+          xml = a.get_android_manifest_xml()
+          for f in xml.findall('.//uses-feature'):
+              print('  ', f.attrib)
+          PY
