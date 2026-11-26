@@ -7,6 +7,13 @@
 // _Softness feathers the edge over that much more, which hides the stair-stepping a hard cut leaves.
 // _Spill pulls the green bounce off the subject's edges, so no halo is left against the room.
 //
+// The texture property is named _BaseMap, and marked [MainTexture], because that is what the sphere
+// is textured through: VideoSphere sets Material.mainTexture / mainTextureScale / mainTextureOffset,
+// and the material it copies is URP/Unlit, whose main texture is _BaseMap. Swapping a material's
+// shader keeps the values of properties both shaders declare, so naming this one the same is what
+// lets the video keep its frame and its per-eye scale and offset across the swap. A shader that
+// declared _MainTex instead would come up with no texture at all.
+//
 // ZTest Always and Transparent: PassthroughController draws the camera image on a quad 2 m from the
 // eyes with ZWrite on, while this sphere is 15 m out. With the ordinary depth test every fragment of
 // the sphere would lose to that quad and the video would never appear. Drawing the sphere over
@@ -17,7 +24,7 @@ Shader "CardboardXR/ChromaKey"
 {
     Properties
     {
-        _MainTex ("Video", 2D) = "white" {}
+        [MainTexture] _BaseMap ("Video", 2D) = "white" {}
         _Threshold ("Key threshold", Range(0.02, 0.6)) = 0.12
         _Softness ("Edge softness", Range(0.005, 0.4)) = 0.08
         _Spill ("Green spill removal", Range(0, 1)) = 0.6
@@ -60,11 +67,11 @@ Shader "CardboardXR/ChromaKey"
                 float2 uv : TEXCOORD0;
             };
 
-            TEXTURE2D(_MainTex);
-            SAMPLER(sampler_MainTex);
+            TEXTURE2D(_BaseMap);
+            SAMPLER(sampler_BaseMap);
 
             CBUFFER_START(UnityPerMaterial)
-                float4 _MainTex_ST;
+                float4 _BaseMap_ST;
                 float _Threshold;
                 float _Softness;
                 float _Spill;
@@ -74,13 +81,13 @@ Shader "CardboardXR/ChromaKey"
             {
                 Varyings output;
                 output.positionHCS = TransformObjectToHClip(input.positionOS.xyz);
-                output.uv = TRANSFORM_TEX(input.uv, _MainTex);
+                output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
                 return output;
             }
 
             half4 frag(Varyings input) : SV_Target
             {
-                half4 video = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv);
+                half4 video = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv);
 
                 // Chromaticity: the colour with brightness divided out, so a green wall reads the
                 // same lit or in shadow.

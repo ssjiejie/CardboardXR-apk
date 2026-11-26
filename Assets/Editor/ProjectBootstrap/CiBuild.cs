@@ -24,6 +24,16 @@ namespace ProjectBootstrap
 
         public static void BuildApk()
         {
+            // Nothing is built until the configuration has been checked against the things that have
+            // actually gone wrong here: package versions, the XR manager and its preload, the video
+            // shader's texture property, the catalog's requirements, the scene's wiring. A build that
+            // fails one of these would install and run, and show a black screen.
+            if (!VerifySetup.RunChecks())
+            {
+                EditorApplication.Exit(1);
+                return;
+            }
+
             PlayerSettings.bundleVersion = Version;
             PlayerSettings.Android.bundleVersionCode = VersionCode;
             AssetDatabase.SaveAssets();

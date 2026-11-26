@@ -123,7 +123,8 @@ namespace CardboardXR.Demos.Video
             }
         }
 
-        // The texture coordinate for a direction given as longitude (0 ahead, positive to the right)        // and latitude (positive up), in radians. Equirectangular: across is longitude and up is
+        // The texture coordinate for a direction given as longitude (0 ahead, positive to the right)
+        // and latitude (positive up), in radians. Equirectangular: across is longitude and up is
         // latitude, with straight ahead in the middle of the frame. A 180 video spans only the
         // front half.
         public static Vector2 Uv(float longitude, float latitude, Projection projection)
