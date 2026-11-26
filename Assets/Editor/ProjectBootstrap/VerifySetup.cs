@@ -151,11 +151,14 @@ namespace ProjectBootstrap
             Expect(stripping == ManagedStrippingLevel.Minimal,
                 $"Android managed stripping is {stripping}, expected Minimal");
 
-            // Empty means "what the platform prefers", which is what the published build used. A
-            // forced Vulkan-first list is what blacked out video, camera and passthrough at once.
+            // Vulkan first, GLES3 as the fallback: the published release notes say the app needs a
+            // Vulkan phone, and this list is exactly what the repository's ProjectSettings carry. A
+            // build that forced GLES3 alone came out all black on camera, video and passthrough.
             var apis = PlayerSettings.GetGraphicsAPIs(BuildTarget.Android);
-            Expect(apis == null || apis.Length == 0,
-                $"Android graphics APIs are left to the platform (found: {(apis == null || apis.Length == 0 ? "automatic" : string.Join(",", apis))})");
+            var apiList = apis ?? new GraphicsDeviceType[0];
+            Expect(apiList.Length >= 2 && apiList[0] == GraphicsDeviceType.Vulkan &&
+                   apiList.Contains(GraphicsDeviceType.OpenGLES3),
+                $"Android graphics APIs are Vulkan then GLES3 (found: {string.Join(",", apiList)})");
         }
 
         // The video demo has to ask for 6DoF and passthrough, or the core never turns them on for it.
