@@ -43,6 +43,12 @@ namespace CardboardXR.Stereo
         [Tooltip("The vertical field of view in mono, in degrees. The viewer's own is far wider, which " +
                  "only makes sense seen through its lenses.")]
         [SerializeField, Range(30f, 120f)] float m_MonoFieldOfView = 60f;
+        [Tooltip("Stretch each eye's picture over the whole of its half of the screen. The lens mesh " +
+                 "only covers as much of the screen as the viewer's field of view reaches, which " +
+                 "leaves a black border around each eye when the picture is watched without the " +
+                 "viewer, or on a phone that reports its screen size wrongly. The \"fill\" launch " +
+                 "option overrides it.")]
+        [SerializeField] bool m_FillEyes = true;
 
         readonly Camera[] m_EyeCameras = new Camera[2];
         readonly Vector3[] m_EyeOffsets = new Vector3[2];
@@ -102,6 +108,7 @@ namespace CardboardXR.Stereo
             // A render texture takes 1, 2, 4 or 8 samples and throws on anything else.
             m_Msaa = samples >= 8 ? 8 : samples >= 4 ? 4 : samples >= 2 ? 2 : 1;
             m_Mono = LaunchOptions.GetInt("mono", m_Mono ? 1 : 0) != 0;
+            m_FillEyes = LaunchOptions.GetInt("fill", m_FillEyes ? 1 : 0) != 0;
             // The frame-rate target doesn't switch the panel's refresh rate by itself.
             DisplayRefreshRate.Request(frameRate);
             // Measured on an iPhone 15 Pro: allowing a second queued frame changed nothing, so keep the
@@ -261,6 +268,8 @@ namespace CardboardXR.Stereo
             {
                 var eye = (Eye)i;
                 m_Meshes[i] = m_Lens.CreateDistortionMesh(eye);
+                if (m_FillEyes)
+                    FillEye(m_Meshes[i], eye);
                 m_Materials[i] = new Material(m_DistortionShader)
                 {
                     name = $"{eye} Distortion",
@@ -271,6 +280,51 @@ namespace CardboardXR.Stereo
 
             if (m_AlignmentMarker)
                 CreateAlignmentMarker(screenSize);
+        }
+
+        // Scales a distortion mesh so its bounding box covers the eye's whole half of the screen, and
+        // no more: the picture keeps its proportions and the edges that fall outside are cropped.
+        // The mesh is laid out from the viewer's field of view and the phone's physical screen size,
+        // and Android only reports a DPI for that, which many phones get wrong; a size that comes out
+        // too small shrinks the picture to a patch in the middle. Filling the half makes it reach the
+        // edges whatever the phone claims to measure.
+        static void FillEye(Mesh mesh, Eye eye)
+        {
+            var vertices = mesh.vertices;
+            var minX = float.MaxValue;
+            var maxX = float.MinValue;
+            var minY = float.MaxValue;
+            var maxY = float.MinValue;
+            foreach (var vertex in vertices)
+            {
+                minX = Mathf.Min(minX, vertex.x);
+                maxX = Mathf.Max(maxX, vertex.x);
+                minY = Mathf.Min(minY, vertex.y);
+                maxY = Mathf.Max(maxY, vertex.y);
+            }
+            var width = maxX - minX;
+            var height = maxY - minY;
+            if (width <= 1e-5f || height <= 1e-5f)
+                return;
+
+            // NDC across the whole screen: the left eye owns -1..0, the right eye 0..1.
+            var left = eye == Eye.Left ? -1f : 0f;
+            var right = eye == Eye.Left ? 0f : 1f;
+            // Cover rather than fit: the larger of the two ratios fills the half and crops the rest,
+            // so nothing is stretched out of shape.
+            var scale = Mathf.Max((right - left) / width, 2f / height);
+            var centerX = (minX + maxX) * 0.5f;
+            var centerY = (minY + maxY) * 0.5f;
+            var targetX = (left + right) * 0.5f;
+            for (var i = 0; i < vertices.Length; i++)
+            {
+                var vertex = vertices[i];
+                vertex.x = targetX + (vertex.x - centerX) * scale;
+                vertex.y = (vertex.y - centerY) * scale;
+                vertices[i] = vertex;
+            }
+            mesh.vertices = vertices;
+            mesh.RecalculateBounds();
         }
 
         // A solid line through the same shader, drawn after the eye images so it covers their edges.
