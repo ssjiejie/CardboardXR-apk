@@ -209,8 +209,12 @@ namespace ProjectBootstrap
                 if (material?.objectReferenceValue is Material mat && mat.shader != null)
                     Ok($"VideoSphere material uses {mat.shader.name}");
             }
-            Expect(Object.FindObjectsByType<PassthroughController>(FindObjectsInactive.Include,
-                FindObjectsSortMode.None).Length > 0, "Video.unity has a PassthroughController");
+            // The passthrough rig lives in the core scene, not in the demo scene: the demo's
+            // see-through button talks to the controller the core built. Check it where it is.
+            const string corePath = "Assets/_Project/Scenes/Core.unity";
+            Expect(File.Exists(corePath) && File.ReadAllText(corePath)
+                    .Contains("CardboardXR.Stereo::CardboardXR.Stereo.PassthroughController"),
+                "Core.unity still holds the PassthroughController");
             var demo = Object.FindObjectsByType<VideoDemo>(FindObjectsInactive.Include,
                 FindObjectsSortMode.None).FirstOrDefault();
             Expect(demo != null, "Video.unity has a VideoDemo");
@@ -231,7 +235,11 @@ namespace ProjectBootstrap
         // has to take its texture in _BaseMap, which is the property URP/Unlit put the video in.
         static void CheckShaders()
         {
-            var shader = Resources.Load<Shader>("ChromaKey");
+            // Resources.Load is what the runtime does; the AssetDatabase fallback only covers a first
+            // import in batch mode where the Resources index may not be warm yet. A shader that is
+            // truly missing fails both.
+            var shader = Resources.Load<Shader>("ChromaKey")
+                         ?? AssetDatabase.LoadAssetAtPath<Shader>("Assets/_Project/Demos/Video/Resources/ChromaKey.shader");
             if (shader == null)
             {
                 Bad("Resources/ChromaKey.shader does not load");

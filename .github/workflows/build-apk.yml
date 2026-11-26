@@ -10,30 +10,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # IL2CPP writes libil2cpp.so twice (once as the detached debug symbol file) and an ARM64
+      # build needs roughly 32 GB of scratch space. The runner's disk is 72 GB with about 36 GB
+      # free, and an earlier run died with "No space left on device" while copying
+      # Library/Bee/artifacts/.../libil2cpp.dbg.so. /mnt turned out to be the same filesystem as
+      # /, so the fix is to reclaim system toolchains this build never touches rather than to move
+      # directories around.
       - name: Free disk space
         run: |
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /usr/local/share/boost /opt/hostedtoolcache/CodeQL || true
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /usr/local/share/boost \
+            /opt/hostedtoolcache/CodeQL /usr/share/swift /usr/lib/jvm /opt/microsoft /opt/az \
+            /opt/google/chrome /usr/local/lib/node_modules /usr/local/share/powershell \
+            /usr/share/miniconda /opt/pipx || true
+          sudo apt-get clean || true
           df -h /
-
-      # IL2CPP writes libil2cpp.so twice (once as the debug symbol file) and a full ARM64 build
-      # needs more than the 33 GB the root filesystem has left: an earlier run died with
-      # "No space left on device" while copying Library/Bee/artifacts/.../libil2cpp.dbg.so.
-      # The runner's /mnt is a separate, much larger disk, so the whole Unity Library and the
-      # Gradle cache live there instead of on the root filesystem. Nothing about the build
-      # itself changes: same editor, same project, same settings.
-      - name: Scratch space for Library
-        run: |
-          SCRATCH=/mnt/unity-build
-          AVAIL=$(df -Pk /mnt 2>/dev/null | awk 'NR==2 {print $4}')
-          echo "space on /mnt: ${AVAIL:-none} KB"
-          if [ -z "$AVAIL" ] || [ "$AVAIL" -lt 40000000 ]; then
-            SCRATCH="$PWD/.scratch"
-            echo "::warning::/mnt has no room; falling back to $SCRATCH on the root disk"
-          fi
-          mkdir -p "$SCRATCH/library" "$SCRATCH/gradle"
-          chmod -R 777 "$SCRATCH"
-          echo "SCRATCH=$SCRATCH" >> "$GITHUB_ENV"
-          df -h / /mnt 2>/dev/null || true
 
       - name: Restore machine identity and licence
         run: |
@@ -60,8 +50,6 @@ jobs:
             --shm-size=2g \
             -v /etc/machine-id:/etc/machine-id:ro \
             -v "$PWD":/project \
-            -v "$SCRATCH/library":/project/Library \
-            -v "$SCRATCH/gradle":/root/.gradle \
             -v "$PWD/lic":/root/.config/unity3d/Unity/licenses \
             -w /project \
             unityci/editor:ubuntu-6000.6.8f1-android-3 \
@@ -84,9 +72,21 @@ jobs:
         if: always()
         run: |
           grep -a "\[CiBuild\]" build.log | head -10 2>/dev/null || true
+          # Every check line, not the first ten: a single FAIL near the top is the whole reason the
+          # build stopped, and truncating the list hid it on an earlier run.
+          grep -a "\[Verify\]" build.log 2>/dev/null || true
           grep -a -E "\[Build\]|error CS|Build Succeeded|Build Failed" build.log | head -30 2>/dev/null || true
-          tail -60 build.log 2>/dev/null || echo "no build.log"
+          tail -40 build.log 2>/dev/null || echo "no build.log"
           df -h / /mnt 2>/dev/null || true
+
+      - name: Upload build log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: ignore
+          retention-days: 3
 
       - name: Verify APK produced
         run: |
