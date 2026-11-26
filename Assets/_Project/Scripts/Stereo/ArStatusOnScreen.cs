@@ -57,6 +57,7 @@ namespace CardboardXR.Stereo
             m_Healthy = loader != "none" && subsystem == "ok" && material == "ok" && permission == "granted";
 
             var text = new StringBuilder();
+            text.AppendLine($"=== build v{Application.version} ===");
             text.AppendLine($"XR loader: {loader}");
             text.AppendLine($"AR session: {session}");
             text.AppendLine($"camera subsystem: {subsystem}");
@@ -81,9 +82,10 @@ namespace CardboardXR.Stereo
                 };
 
             var w = Screen.width * 0.9f;
-            var h = m_Style.fontSize * 6.5f;
-            var rect = new Rect(Screen.width * 0.05f, Screen.height * 0.06f, w, h);
-            GUI.color = new Color(0f, 0f, 0f, 0.55f);
+            var h = m_Style.fontSize * 7.5f;
+            var rect = new Rect(Screen.width * 0.05f, Screen.height * 0.04f, w, h);
+            // Unhealthy: red wash so it cannot be mistaken for part of the app's own UI.
+            GUI.color = m_Healthy ? new Color(0f, 0f, 0f, 0.55f) : new Color(0.5f, 0f, 0f, 0.75f);
             GUI.DrawTexture(rect, Texture2D.whiteTexture);
             GUI.color = Color.white;
             m_Style.normal.textColor = Color.white;
