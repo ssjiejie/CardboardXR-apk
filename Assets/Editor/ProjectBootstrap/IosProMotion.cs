@@ -1,3 +1,6 @@
+// iOS only. UnityEditor.iOS.Xcode lives in the iOS build-support module, which an Android-only
+// editor install does not have; compiling this file there fails the whole project, so it is fenced.
+#if UNITY_IOS
 using System.IO;
 using UnityEditor;
 using UnityEditor.Build;
@@ -42,3 +45,4 @@ namespace ProjectBootstrap
         }
     }
 }
+#endif
