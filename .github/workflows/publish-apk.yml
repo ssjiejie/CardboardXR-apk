@@ -1,0 +1,82 @@
+name: Publish APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Build run id whose CardboardXR-apk artifact should be published
+        required: true
+        default: "45793712888"
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Fetch the APK artifact
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh run download "${{ inputs.run_id }}" -R "$GITHUB_REPOSITORY" -n CardboardXR-apk -D art
+          find art -type f -exec ls -lh {} \;
+
+      - name: Inspect the package
+        run: |
+          APK=$(find art -name '*.apk' | head -1)
+          echo "APK=$APK"
+          ls -l "$APK"
+          sha256sum "$APK" | tee sha.txt
+          mkdir -p x && unzip -o -q "$APK" -d x
+          echo "=== native ABIs ==="
+          ls x/lib 2>/dev/null || echo "no lib/ (Mono build?)"
+          echo "=== ARCore registration hooks ==="
+          python3 - <<'PY'
+          import glob, json, re
+          paths = glob.glob('x/assets/bin/Data/RuntimeInitializeOnLoads.json')
+          if not paths:
+              print('RuntimeInitializeOnLoads.json NOT FOUND')
+              raise SystemExit(0)
+          raw = open(paths[0], encoding='utf-8', errors='replace').read()
+          total = len(re.findall(r'Unity\.XR\.ARCore', raw))
+          cam = 'ARCoreCameraSubsystem' in raw
+          print(f'Unity.XR.ARCore occurrences: {total}')
+          print(f'ARCoreCameraSubsystem present: {cam}')
+          print('VERDICT:', 'PASS' if total >= 11 and cam else 'FAIL')
+          PY
+
+      - name: Version, SDK and permissions
+        run: |
+          pip install -q pyaxmlparser
+          APK=$(find art -name '*.apk' | head -1)
+          python3 - "$APK" <<'PY'
+          import sys
+          from pyaxmlparser import APK
+          a = APK(sys.argv[1])
+          print('package      :', a.package)
+          print('versionName  :', a.version_name)
+          print('versionCode  :', a.version_code)
+          print('minSdk       :', a.get_min_sdk_version())
+          print('targetSdk    :', a.get_target_sdk_version())
+          print('permissions  :')
+          for p in sorted(a.get_permissions()):
+              print('  ', p)
+          print('ar-core      :', a.get_android_manifest_xml().get('feature', ''))
+          PY
+
+      - name: Publish as a release asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          APK=$(find art -name '*.apk' | head -1)
+          TAG="build-${{ inputs.run_id }}"
+          cp "$APK" "CardboardXR-${{ inputs.run_id }}.apk"
+          gh release create "$TAG" "CardboardXR-${{ inputs.run_id }}.apk" \
+            -R "$GITHUB_REPOSITORY" \
+            -t "CardboardXR test build ${{ inputs.run_id }}" \
+            -n "Built from commit $(gh api repos/$GITHUB_REPOSITORY/actions/runs/${{ inputs.run_id }} -q .head_sha). AR Foundation / ARCore 6.6.2." \
+            --latest
+          echo "release: https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG"
