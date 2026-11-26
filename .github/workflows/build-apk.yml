@@ -1,0 +1,78 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /usr/local/share/boost /opt/hostedtoolcache/CodeQL || true
+          df -h /
+
+      - name: Restore machine identity and licence
+        run: |
+          echo "576562626572264761624c65526f7578" | sudo tee /etc/machine-id
+          mkdir -p lic
+          echo "${{ secrets.UNITY_ENTITLEMENT }}" | base64 -d > lic/UnityEntitlementLicense.xml
+          rm -rf Builds build.log
+          ls -l lic/
+
+      - name: Pull Unity image
+        run: docker pull unityci/editor:ubuntu-6000.6.8f1-android-3
+
+      # One process, one method: ProjectBootstrap.CiBuild.BuildApk, which is the official
+      # release script's command with a version stamp on. No graphics API, stripping, code
+      # generation or XR setting is touched here; they come from the repository's ProjectSettings
+      # exactly as the published 1.0.0 build did.
+      #
+      # The 2 GB /dev/shm is not optional: Docker's 64 MB default made Unity abort with
+      # "Requested 1073741824 bytes, but only 67108864 bytes available" on an earlier run.
+      - name: Build APK
+        run: |
+          docker run --rm \
+            --hostname 846694108c80 \
+            --shm-size=2g \
+            -v /etc/machine-id:/etc/machine-id:ro \
+            -v "$PWD":/project \
+            -v "$PWD/lic":/root/.config/unity3d/Unity/licenses \
+            -w /project \
+            unityci/editor:ubuntu-6000.6.8f1-android-3 \
+            bash -c '
+              /opt/unity/Editor/Data/Resources/Licensing/Client/Unity.Licensing.Client > /tmp/lic.log 2>&1 &
+              sleep 10
+              tail -20 /tmp/lic.log
+
+              /opt/unity/Editor/Unity -batchmode -nographics -quit \
+                -projectPath /project \
+                -buildTarget Android \
+                -executeMethod ProjectBootstrap.CiBuild.BuildApk \
+                -logFile /project/build.log
+              rc=$?
+              echo "UNITY_EXIT=$rc"
+              exit $rc
+            '
+
+      - name: Build log tail
+        if: always()
+        run: |
+          grep -a "\[CiBuild\]" build.log | head -10 2>/dev/null || true
+          grep -a -E "\[Build\]|error CS|Build Succeeded|Build Failed" build.log | head -30 2>/dev/null || true
+          tail -60 build.log 2>/dev/null || echo "no build.log"
+
+      - name: Verify APK produced
+        run: |
+          ls -lh Builds/ || true
+          test -n "$(find Builds -name '*.apk' -size +1M 2>/dev/null)" || { echo "::error::no APK produced"; exit 1; }
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CardboardXR-apk
+          path: Builds/*.apk
+          if-no-files-found: error
