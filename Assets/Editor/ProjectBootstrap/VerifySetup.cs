@@ -240,7 +240,12 @@ namespace ProjectBootstrap
             Ok($"ChromaKey shader loads ({shader.name})");
             // isSupported is meaningless in -nographics: it reports the host's GPU, not the phone's.
             Debug.Log($"[Verify]     (isSupported on this host: {shader.isSupported}; ignored in batch mode)");
-            Expect(shader.HasProperty("_BaseMap"), "ChromaKey takes its texture in _BaseMap (matches URP/Unlit)");
+            // Shader has no HasProperty (that's a Material API); probing with a throwaway Material also
+            // proves the property survives the runtime path that actually sets the video texture.
+            var probe = new Material(shader);
+            bool shaderHasBaseMap = probe.HasProperty("_BaseMap");
+            Object.DestroyImmediate(probe);
+            Expect(shaderHasBaseMap, "ChromaKey takes its texture in _BaseMap (matches URP/Unlit)");
 
             // Read from the asset, not from the scene: the scene is closed by now, and what matters is
             // which property the material the sphere copies actually keeps its texture in.
