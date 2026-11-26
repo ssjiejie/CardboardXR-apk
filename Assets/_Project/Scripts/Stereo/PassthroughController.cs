@@ -46,6 +46,10 @@ namespace CardboardXR.Stereo
         [SerializeField] float m_Distance = 2f;
         [Tooltip("Height of the passthrough texture in pixels; its width follows the camera image's shape.")]
         [SerializeField] int m_TextureHeight = 720;
+        [Tooltip("How much the image is enlarged past what the camera recorded. 0 fills each eye with it, " +
+                 "cropping what falls outside, so no dark border shows; 1 shows it at the camera's own " +
+                 "size, a window with a border around it. The fill is worked out from the viewer's eyes.")]
+        [SerializeField] float m_Zoom;
 
         ARCameraManager m_CameraManager;
         TrackedPoseDriver m_PoseDriver;
@@ -97,6 +101,28 @@ namespace CardboardXR.Stereo
                     Debug.Log(value.HasValue ? $"[Passthrough] Focus at {value.Value:F2} m" : $"[Passthrough] Focus back at {m_Distance:F1} m");
                 m_FocusDistance = value;
             }
+        }
+
+        // How much the image is enlarged past the camera's own view, or 0 to fill each eye with it.
+        public float Zoom
+        {
+            get => m_Zoom;
+            set => m_Zoom = Mathf.Max(0f, value);
+        }
+
+        // The enlargement actually drawn: the set one, or the one that covers an eye, cropping the
+        // edges. The camera sees less than a Cardboard eye, so at its own size the image is a window
+        // with a border of nothing around it; filling the eye is what removes the border.
+        float ShownZoom()
+        {
+            if (m_Zoom > 0.01f)
+                return m_Zoom;
+            if (m_Rig == null || m_FrustumSize.x <= 1e-4f || m_FrustumSize.y <= 1e-4f)
+                return 1f;
+            var eye = m_Rig.EyeFrustumSizeAtUnitDistance();
+            if (eye.x <= 1e-4f || eye.y <= 1e-4f)
+                return 1f;
+            return Mathf.Clamp(Mathf.Max(eye.x / m_FrustumSize.x, eye.y / m_FrustumSize.y), 1f, 4f);
         }
 
         void Awake()
@@ -399,9 +425,10 @@ namespace CardboardXR.Stereo
             var step = 1f - Mathf.Exp(-Time.unscaledDeltaTime / k_FocusSeconds);
             m_ShownDistance = Mathf.Exp(Mathf.Lerp(Mathf.Log(m_ShownDistance), Mathf.Log(target), step));
             var d = m_ShownDistance;
+            var zoom = ShownZoom();
             var screen = m_Screen.transform;
-            screen.SetLocalPositionAndRotation(new Vector3(m_FrustumCenter.x * d, m_FrustumCenter.y * d, d), Quaternion.identity);
-            screen.localScale = new Vector3(m_FrustumSize.x * d, m_FrustumSize.y * d, 1f);
+            screen.SetLocalPositionAndRotation(new Vector3(m_FrustumCenter.x * d * zoom, m_FrustumCenter.y * d * zoom, d), Quaternion.identity);
+            screen.localScale = new Vector3(m_FrustumSize.x * d * zoom, m_FrustumSize.y * d * zoom, 1f);
         }
     }
 }

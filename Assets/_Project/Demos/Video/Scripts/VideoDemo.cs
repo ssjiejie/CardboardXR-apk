@@ -57,11 +57,16 @@ namespace CardboardXR.Demos.Video
         M3Button m_PreviousPage;
         M3Button m_NextPage;
         M3Button m_GreenButton;
+        M3Button m_CamButton;
         M3Button m_EyesButton;
+        TMP_Text m_ZoomLabel;
+        CameraBackdrop m_Backdrop;
         bool m_Green;
         bool m_StereoEyes;
         float m_Zoom = 1f;
+        bool m_Scanning;
         TMP_Text m_EmptyMessage;
+        string m_EmptyText;
         readonly List<(M3Button item, TMP_Text supporting)> m_EntryButtons = new();
         int m_Page;
         bool m_ShowingLibrary;
@@ -82,6 +87,11 @@ namespace CardboardXR.Demos.Video
             m_Player.frameDropped += OnFrameDropped;
             m_Sphere.Clicked += OnVideoClicked;
 
+            // Made per demo entry rather than in the scene, so the camera object holds nothing in a
+            // scene that never shows a video, and is thrown away with the demo.
+            if (m_Backdrop == null)
+                m_Backdrop = new GameObject("Camera Backdrop").AddComponent<CameraBackdrop>();
+
             BuildPanel();
             Refresh();
             ShowLibrary();
@@ -98,6 +108,14 @@ namespace CardboardXR.Demos.Video
             m_Player.Stop();
             m_Sphere.Show(null, default);
             ReleaseTexture();
+            // A scan still running belongs to this visit; the next one starts its own.
+            m_Scanning = false;
+            if (m_Backdrop != null)
+            {
+                m_Backdrop.Show(false);
+                Destroy(m_Backdrop.gameObject);
+                m_Backdrop = null;
+            }
         }
 
         void OnDestroy() => ReleaseTexture();
@@ -106,6 +124,10 @@ namespace CardboardXR.Demos.Video
         {
             if (m_Core == null)
                 return;
+            // Whatever the background scan found, put on the panel now.
+            VideoGallery.Pump();
+            if (m_CamButton != null && m_Backdrop != null && m_CamButton.Selected != m_Backdrop.IsOn)
+                m_CamButton.Selected = m_Backdrop.IsOn;
             if (m_ShowingLibrary)
                 UpdateLibraryLabels();
             else if (m_ControlsShown)
@@ -123,13 +145,36 @@ namespace CardboardXR.Demos.Video
         void Refresh()
         {
             m_Library = VideoLibrary.Find(m_Bundled, out var bundled);
-            // The phone's own gallery comes next, once the player has allowed it: the folder above
-            // needs a cable or a file manager Android no longer lets most of them open.
-            var gallery = VideoGallery.HasAccess ? VideoGallery.FindRecent(40) : new List<VideoEntry>();
-            m_Library.AddRange(gallery);
             m_Page = 0;
-            Debug.Log($"[Video] {m_Library.Count} videos: {bundled} bundled, {gallery.Count} from the gallery, " +
-                      $"the rest from {VideoLibrary.VideoFolder}");
+            // The phone's own gallery comes next, once the player has allowed it: the folder above
+            // needs a cable or a file manager Android no longer lets most of them open. Looking
+            // through it walks thousands of files, so it runs off the frame; the list fills in when
+            // it's done.
+            if (!VideoGallery.HasAccess)
+            {
+                Debug.Log($"[Video] {m_Library.Count} videos: {bundled} bundled; the gallery needs its permission");
+                return;
+            }
+            if (m_Scanning)
+                return;
+            m_Scanning = true;
+            if (m_EmptyMessage != null)
+                m_EmptyMessage.text = "Looking through this phone's videos…";
+            VideoGallery.FindRecentAsync(40, gallery =>
+            {
+                // The demo may have been left, and this object destroyed, before the scan finished.
+                if (this == null)
+                    return;
+                m_Scanning = false;
+                m_Library = VideoLibrary.Find(m_Bundled, out var nowBundled);
+                m_Library.AddRange(gallery);
+                m_Page = 0;
+                if (m_EmptyMessage != null && m_EmptyText != null)
+                    m_EmptyMessage.text = m_EmptyText;
+                Debug.Log($"[Video] {m_Library.Count} videos: {nowBundled} bundled, {gallery.Count} from the gallery, " +
+                          $"the rest from {VideoLibrary.VideoFolder}");
+                UpdateLibraryLabels();
+            });
         }
 
         // The + on the library: asks for the media permission the first time, then lists what the
@@ -368,7 +413,7 @@ namespace CardboardXR.Demos.Video
 
         // Both pages share one Material panel, k_PanelDistance away, sized to the page showing. Sizes in dp.
         static readonly Vector2 k_LibrarySize = new(600f, 536f);
-        static readonly Vector2 k_ControlsSize = new(600f, 480f);
+        static readonly Vector2 k_ControlsSize = new(600f, 560f);
 
         void BuildPanel()
         {
@@ -378,8 +423,9 @@ namespace CardboardXR.Demos.Video
             m_LibraryPage = WorldUi.CreateGroup("Library", m_Panel);
             M3.Text("Header", m_LibraryPage, "Videos", M3Theme.Type.TitleLarge, new Vector2(-60f, 220f), new Vector2(432f, 32f),
                 alignment: TextAlignmentOptions.Left);
-            M3.IconButton("Add from gallery", m_LibraryPage, "add", M3Button.Variant.Filled, new Vector2(184f, 220f),
-                AddFromGallery);
+            // No icon: the font only carries the glyphs M3Icons lists, and "add" isn't one of them.
+            M3.Button("Add from gallery", m_LibraryPage, "+", M3Button.Variant.Filled, new Vector2(184f, 220f),
+                AddFromGallery, null, 56f);
             M3.IconButton("Refresh", m_LibraryPage, "refresh", M3Button.Variant.Text, new Vector2(248f, 220f), () =>
             {
                 Refresh();
@@ -400,6 +446,7 @@ namespace CardboardXR.Demos.Video
             m_EmptyMessage = M3.Text("Empty", m_LibraryPage, "No videos yet.\n\n" + add + folder +
                 "\n\nName tags set the format: _360, _180, _sbs, _tb. For Google Drive, list share links in videos.txt in that folder.",
                 M3Theme.Type.BodyMedium, new Vector2(0f, 16f), new Vector2(520f, 300f), M3Theme.OnSurfaceVariant);
+            m_EmptyText = m_EmptyMessage.text;
             m_PreviousPage = M3.IconButton("Previous page", m_LibraryPage, "chevron_left", M3Button.Variant.Text, new Vector2(-84f, -212f),
                 () => Page(-1));
             m_PageLabel = M3.Text("Page", m_LibraryPage, "", M3Theme.Type.BodyMedium, new Vector2(0f, -212f), new Vector2(100f, 24f),
@@ -429,38 +476,62 @@ namespace CardboardXR.Demos.Video
                 () => Skip(k_SkipSeconds));
 
             const float width = 168f;
-            M3.Button("Library", m_ControlsPage, "Library", M3Button.Variant.Tonal, new Vector2(-176f, -128f), ShowLibrary, "video_library",
+            M3.Button("Library", m_ControlsPage, "Library", M3Button.Variant.Tonal, new Vector2(-176f, -96f), ShowLibrary, "video_library",
                 width);
-            M3.Button("Next video", m_ControlsPage, "Next", M3Button.Variant.Tonal, new Vector2(0f, -128f), Next, "skip_next", width);
-            M3.Button("Format", m_ControlsPage, "Format", M3Button.Variant.Tonal, new Vector2(176f, -128f), CycleFormat, "aspect_ratio",
+            M3.Button("Next video", m_ControlsPage, "Next", M3Button.Variant.Tonal, new Vector2(0f, -96f), Next, "skip_next", width);
+            M3.Button("Format", m_ControlsPage, "Format", M3Button.Variant.Tonal, new Vector2(176f, -96f), CycleFormat, "aspect_ratio",
                 width);
 
             // Green screen: cuts the green out of the video, so the room the camera sees shows through.
-            // Stereo eyes: keeps each eye's own view of that room instead of merging them, so the
-            // image sits at the camera's depth rather than flat on the viewer's face.
+            // Camera: shows the room behind the video whether or not the green is cut, and is turned on
+            // with the green screen, since a hole with nothing behind it looks black. Neither carries an
+            // icon: the font only has the glyphs M3Icons lists, and a name it doesn't know draws nothing.
             m_GreenButton = M3.Button("Green screen", m_ControlsPage, "Green", M3Button.Variant.Tonal,
-                new Vector2(-88f, -204f), ToggleGreen, "auto_fix_high", 168f);
+                new Vector2(-176f, -168f), ToggleGreen, null, width);
+            m_CamButton = M3.Button("Camera backdrop", m_ControlsPage, "Camera", M3Button.Variant.Tonal,
+                new Vector2(0f, -168f), ToggleCam, null, width);
             m_EyesButton = M3.Button("Stereo eyes", m_ControlsPage, "Eyes", M3Button.Variant.Tonal,
-                new Vector2(88f, -204f), ToggleStereoEyes, "visibility", 168f);
-            // Zoom, at the ends of the same row: the picture is drawn on a sphere around the head,
-            // so pulling that sphere in is what enlarging the video means here.
-            M3.IconButton("Zoom out", m_ControlsPage, "remove", M3Button.Variant.Tonal, new Vector2(-248f, -204f),
-                () => Zoom(-1));
-            M3.IconButton("Zoom in", m_ControlsPage, "add", M3Button.Variant.Tonal, new Vector2(248f, -204f),
-                () => Zoom(1));
+                new Vector2(176f, -168f), ToggleStereoEyes, "visibility", width);
+
+            // Zoom: a read-out between two plain buttons, so the size can be seen and changed. The
+            // picture is sampled, not the sphere's size, which is why the buttons work at all now.
+            M3.Button("Zoom out", m_ControlsPage, "-", M3Button.Variant.Tonal, new Vector2(-140f, -236f), () => Zoom(-1), null, 72f);
+            m_ZoomLabel = M3.Text("Zoom label", m_ControlsPage, "1.00x", M3Theme.Type.LabelLarge, new Vector2(0f, -236f),
+                new Vector2(160f, 24f), M3Theme.OnSurfaceVariant);
+            M3.Button("Zoom in", m_ControlsPage, "+", M3Button.Variant.Tonal, new Vector2(140f, -236f), () => Zoom(1), null, 72f);
         }
 
         void Zoom(int step)
         {
             m_Zoom = Mathf.Clamp(m_Zoom + step * 0.25f, VideoSphere.MinZoom, VideoSphere.MaxZoom);
             m_Sphere.SetZoom(m_Zoom);
+            if (m_ZoomLabel != null)
+                m_ZoomLabel.text = $"{m_Zoom:F2}x";
         }
 
         void ToggleGreen()
         {
-            m_Green = !m_Green;
-            m_Sphere.SetChromaKey(m_Green);
-            m_GreenButton.Selected = m_Green;
+            var on = !m_Green;
+            if (!m_Sphere.SetChromaKey(on))
+            {
+                Debug.LogWarning("[Video] The green screen has no working shader in this build");
+                m_GreenButton.Selected = false;
+                return;
+            }
+            m_Green = on;
+            m_GreenButton.Selected = on;
+            // A hole needs something behind it: the room the camera sees.
+            if (on && m_Backdrop != null && !m_Backdrop.IsOn)
+                m_Backdrop.Show(true);
+        }
+
+        void ToggleCam()
+        {
+            if (m_Backdrop == null)
+                return;
+            var on = !m_Backdrop.IsOn;
+            m_Backdrop.Show(on);
+            Debug.Log($"[Video] Camera backdrop {(on ? "on" : "off")}");
         }
 
         void ToggleStereoEyes()

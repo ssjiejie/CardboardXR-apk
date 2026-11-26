@@ -21,8 +21,11 @@ namespace CardboardXR.Demos.Video
                  "(GazePointer's max distance, 20 m) so a tap on it registers.")]
         [SerializeField] float m_Radius = 15f;
 
-        // The green-screen shader, in Resources so neither the scene nor a prefab has to hold it.
-        const string k_ChromaShaderName = "ChromaKey";
+        // The green-screen surface, in Resources so neither the scene nor a prefab has to hold it.
+        // Loaded as the material rather than the shader: a shader only reached through
+        // Resources.Load<Shader> had its variants stripped from the build, which turned the sphere
+        // magenta the moment the key was switched on. The material asset keeps them.
+        const string k_ChromaAssetName = "ChromaKey";
         // How much green is cut when the key is on: high enough to remove a lit green screen, low
         // enough to leave skin and dark clothes alone.
         const float k_ChromaStrength = 0.55f;
@@ -39,13 +42,14 @@ namespace CardboardXR.Demos.Video
         Texture m_Texture;
         Vector2 m_TextureScale = Vector2.one;
         Vector2 m_TextureOffset;
-        // 1 is the sphere at its authored radius; more than 1 pulls it closer to the eye, so the
-        // picture fills more of the view, less than 1 pushes it away.
+        // 1 shows the whole frame the eye is meant to see; more takes a smaller part of it, so the
+        // picture fills more of the view.
         float m_Zoom = 1f;
 
-        // The most the picture can be enlarged and shrunk, so it can't be lost by zooming.
-        public const float MinZoom = 0.5f;
-        public const float MaxZoom = 3f;
+        // The most the picture can be enlarged and shrunk, so it can't be lost by zooming. Below 1
+        // the frame is sampled outside itself and its edge stretches; above 1 the picture is cropped.
+        public const float MinZoom = 0.75f;
+        public const float MaxZoom = 4f;
 
         public float Zoom => m_Zoom;
 
@@ -54,9 +58,16 @@ namespace CardboardXR.Demos.Video
 
         void Awake()
         {
-            m_ChromaShader = Resources.Load<Shader>(k_ChromaShaderName);
+            var chromaSource = Resources.Load<Material>(k_ChromaAssetName);
+            m_ChromaShader = chromaSource != null ? chromaSource.shader : Resources.Load<Shader>(k_ChromaAssetName);
             if (m_ChromaShader == null)
-                Debug.LogWarning($"[Video] Resources/{k_ChromaShaderName}.shader is missing; the green screen can't be cut out.");
+                Debug.LogWarning($"[Video] Resources/{k_ChromaAssetName} is missing; the green screen can't be cut out.");
+            else if (!m_ChromaShader.isSupported)
+            {
+                Debug.LogWarning($"[Video] Shader {m_ChromaShader.name} isn't supported on this device ({Application.platform}); " +
+                                 "the green screen can't be cut out.");
+                m_ChromaShader = null;
+            }
             m_Full = BuildMesh(Projection.Full360, m_Radius);
             m_Half = BuildMesh(Projection.Half180, m_Radius);
             for (var eye = 0; eye < 2; eye++)
@@ -119,13 +130,14 @@ namespace CardboardXR.Demos.Video
         }
 
         // Cuts the green out of the video, or puts it back. Safe to call before a video plays, and
-        // while one does: the frame already on screen is moved onto the other shader.
-        public void SetChromaKey(bool on)
+        // while one does: the frame already on screen is moved onto the other shader. Returns false
+        // when the key was asked for and this build has no working shader for it.
+        public bool SetChromaKey(bool on)
         {
             if (m_Chroma == on)
-                return;
+                return true;
             if (on && m_ChromaShader == null)
-                return;
+                return false;
             m_Chroma = on;
             foreach (var material in m_Materials)
             {
@@ -135,18 +147,19 @@ namespace CardboardXR.Demos.Video
                 PutTextureOn(material);
             }
             Debug.Log($"[Video] Green screen {(on ? "on" : "off")}");
+            return true;
         }
 
-        // Pulls the picture closer (zoom > 1) or pushes it away (zoom < 1). The sphere is drawn
-        // around the head, so scaling the transform is the same as changing its radius: a smaller
-        // sphere shows less of the frame, which reads as zooming in. The click surface is scaled
-        // back the other way, so a tap still reaches the video however far it was zoomed.
+        // Enlarges the picture (>1) or shrinks it (<1). The sphere is drawn around the head, so
+        // moving it closer changes nothing on screen: every direction the eye looks maps to the same
+        // texture coordinate however far the surface is. Zooming means sampling a smaller part of the
+        // frame instead, which is why this rewrites the texture transform rather than scaling the
+        // transform, which is what it used to do and why the buttons did nothing.
         public void SetZoom(float zoom)
         {
             m_Zoom = Mathf.Clamp(zoom, MinZoom, MaxZoom);
-            transform.localScale = Vector3.one / m_Zoom;
-            if (m_ClickSurface != null)
-                m_ClickSurface.transform.localScale = Vector3.one * m_Zoom;
+            foreach (var material in m_Materials)
+                PutTextureOn(material);
             Debug.Log($"[Video] Zoom {m_Zoom:F2}x");
         }
 
@@ -156,8 +169,12 @@ namespace CardboardXR.Demos.Video
                 return;
             // mainTexture is the shader's [MainTexture]: _BaseMap on both URP/Unlit and ChromaKey.
             material.mainTexture = m_Texture;
-            material.mainTextureScale = m_TextureScale;
-            material.mainTextureOffset = m_TextureOffset;
+            // The part of the frame this eye shows: the whole picture, or half of a stereo one.
+            var eye = m_TextureScale;
+            var size = eye / m_Zoom;
+            var center = m_TextureOffset + eye * 0.5f;
+            material.mainTextureScale = size;
+            material.mainTextureOffset = center - size * 0.5f;
         }
 
         // The texture coordinate for a direction given as longitude (0 ahead, positive to the right)

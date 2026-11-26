@@ -1,6 +1,8 @@
 // The surface a 360 or 180 video is drawn on, with an optional green-screen key: the green in the
 // picture is cut out, so whatever is behind the sphere shows through where it was, such as the
 // passthrough camera image. Key 0 draws every pixel, as an ordinary unlit video surface does.
+// The same shader draws the camera image behind that sphere: _Rotation turns the frame the way the
+// phone's camera reports it, and _MirrorX flips it for a front camera.
 Shader "CardboardXR/VideoChromaKey"
 {
     Properties
@@ -11,6 +13,10 @@ Shader "CardboardXR/VideoChromaKey"
         _ChromaKey ("Green Screen", Range(0, 1)) = 0
         [Tooltip("How soft the cut edge is: a larger value leaves a wider fringe.")]
         _ChromaSoftness ("Green Screen Edge", Range(0.01, 0.5)) = 0.08
+        [Tooltip("Quarter turns clockwise applied to the picture: 0, 1, 2 or 3. For a camera frame, not a video.")]
+        _Rotation ("Rotation", Range(0, 3)) = 0
+        [Tooltip("Flips the picture across, for a front camera.")]
+        _MirrorX ("Mirror", Range(0, 1)) = 0
     }
 
     SubShader
@@ -32,6 +38,7 @@ Shader "CardboardXR/VideoChromaKey"
             ZTest LEqual
 
             HLSLPROGRAM
+            #pragma target 3.0
             #pragma vertex vert
             #pragma fragment frag
 
@@ -45,6 +52,8 @@ Shader "CardboardXR/VideoChromaKey"
                 half4 _BaseColor;
                 float _ChromaKey;
                 float _ChromaSoftness;
+                float _Rotation;
+                float _MirrorX;
             CBUFFER_END
 
             struct Attributes
@@ -69,7 +78,19 @@ Shader "CardboardXR/VideoChromaKey"
 
             half4 frag(Varyings input) : SV_Target
             {
-                half4 color = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv) * _BaseColor;
+                float2 uv = input.uv;
+                // Quarter turns, then a flip: what a phone camera reports about its frame.
+                int quarter = (int)round(_Rotation);
+                if (quarter == 1)
+                    uv = float2(uv.y, 1.0 - uv.x);
+                else if (quarter == 2)
+                    uv = float2(1.0 - uv.x, 1.0 - uv.y);
+                else if (quarter == 3)
+                    uv = float2(1.0 - uv.y, uv.x);
+                if (_MirrorX > 0.5)
+                    uv.x = 1.0 - uv.x;
+
+                half4 color = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uv) * _BaseColor;
                 if (_ChromaKey > 0.001)
                 {
                     // How far the green channel leads both others: high on a green screen, near zero
@@ -84,6 +105,5 @@ Shader "CardboardXR/VideoChromaKey"
             ENDHLSL
         }
     }
-
     Fallback Off
 }

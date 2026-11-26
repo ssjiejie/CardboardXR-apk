@@ -84,15 +84,23 @@ namespace CardboardXR.Demos.Video
         // The most recently changed videos on the phone, newest first, at most max of them.
         public static List<VideoEntry> FindRecent(int max)
         {
-            var entries = new List<VideoEntry>();
             if (!HasAccess)
-                return entries;
+                return new List<VideoEntry>();
+            return FindRecentUnchecked(max, Root);
+        }
+
+        // Finds the same list from any thread, for a scan that mustn't hold up the frame. Android's
+        // permission API is only asked on the main thread, so the caller checks HasAccess first.
+        // Walks every folder it knows, so on a phone with years of recordings it can take seconds.
+        static List<VideoEntry> FindRecentUnchecked(int max, string root)
+        {
+            var entries = new List<VideoEntry>();
 
             var found = new List<(string path, DateTime time)>();
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var folder in k_Folders)
             {
-                Collect(Path.Combine(Root, folder), 0, seen, found);
+                Collect(Path.Combine(root, folder), 0, seen, found);
                 if (found.Count >= k_MaxFiles)
                     break;
             }
@@ -109,6 +117,54 @@ namespace CardboardXR.Demos.Video
                 });
             }
             return entries;
+        }
+
+        // The main thread's queue of work the scanner sends back.
+        static readonly Queue<Action> s_MainThread = new();
+
+        // Runs whatever the background scan finished, on the main thread. Call it once a frame.
+        public static void Pump()
+        {
+            while (true)
+            {
+                Action action;
+                lock (s_MainThread)
+                {
+                    if (s_MainThread.Count == 0)
+                        return;
+                    action = s_MainThread.Dequeue();
+                }
+                action();
+            }
+        }
+
+        // The same list as FindRecent, found off the main thread: the folders hold thousands of
+        // files, and walking them in the frame froze the app for as long as it took. done runs on
+        // the main thread.
+        public static void FindRecentAsync(int max, Action<List<VideoEntry>> done)
+        {
+            if (!HasAccess)
+            {
+                done(new List<VideoEntry>());
+                return;
+            }
+            // Looked up here, on the main thread: asking Android for it is a JNI call.
+            var root = Root;
+            System.Threading.Tasks.Task.Run(() =>
+            {
+                List<VideoEntry> list;
+                try
+                {
+                    list = FindRecentUnchecked(max, root);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"[Video] Scanning the phone for videos failed: {e.Message}");
+                    list = new List<VideoEntry>();
+                }
+                lock (s_MainThread)
+                    s_MainThread.Enqueue(() => done(list));
+            });
         }
 
         // The shared storage root, as the system sees it: /storage/emulated/0 on a phone.
