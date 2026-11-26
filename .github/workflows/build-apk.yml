@@ -1,0 +1,137 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: bundleVersion
+        required: true
+        default: "1.4.0"
+      version_code:
+        description: Android bundleVersionCode, must be above every installed build
+        required: true
+        default: "10400"
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /usr/local/share/boost \
+            /opt/hostedtoolcache/CodeQL /usr/share/swift /usr/share/miniconda /opt/pipx || true
+          sudo apt-get clean || true
+          df -h /
+
+      - name: Restore machine identity and licence
+        run: |
+          echo "576562626572264761624c65526f7578" | sudo tee /etc/machine-id
+          mkdir -p lic
+          echo "${{ secrets.UNITY_ENTITLEMENT }}" | base64 -d > lic/UnityEntitlementLicense.xml
+          rm -rf Builds build.log
+          ls -l lic/
+
+      - name: Pull Unity image
+        run: docker pull unityci/editor:ubuntu-6000.6.0f1-android-3
+
+      - name: Build APK
+        env:
+          CARDBOARDXR_VERSION: ${{ inputs.version }}
+          CARDBOARDXR_VERSION_CODE: ${{ inputs.version_code }}
+        run: |
+          docker run --rm \
+            --hostname 846694108c80 \
+            --shm-size=2g \
+            -e CARDBOARDXR_VERSION \
+            -e CARDBOARDXR_VERSION_CODE \
+            -v /etc/machine-id:/etc/machine-id:ro \
+            -v "$PWD":/project \
+            -v "$PWD/lic":/root/.config/unity3d/Unity/licenses \
+            -w /project \
+            unityci/editor:ubuntu-6000.6.0f1-android-3 \
+            bash -c '
+              /opt/unity/Editor/Data/Resources/Licensing/Client/Unity.Licensing.Client > /tmp/lic.log 2>&1 &
+              sleep 10
+              tail -20 /tmp/lic.log
+
+              /opt/unity/Editor/Unity -batchmode -nographics -quit \
+                -projectPath /project \
+                -buildTarget Android \
+                -executeMethod ProjectBootstrap.BuildCi.BuildApk \
+                -logFile /project/build.log
+              rc=$?
+              echo "UNITY_EXIT=$rc"
+              exit $rc
+            '
+
+      - name: Build log tail
+        if: always()
+        run: |
+          grep -a -E "\[Build\]|\[CiBuild\]|error CS|Build Succeeded|Build Failed" build.log | head -40 2>/dev/null || true
+          tail -40 build.log 2>/dev/null || echo "no build.log"
+          df -h /
+
+      - name: Upload build log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: ignore
+          retention-days: 3
+
+      - name: Verify APK produced
+        run: |
+          ls -lh Builds/ || true
+          test -f Builds/CardboardXR.apk || { echo "::error::no APK produced"; exit 1; }
+
+      - name: Inspect the package
+        run: |
+          unzip -o -q Builds/CardboardXR.apk -d x
+          echo "=== native ABIs ==="
+          ls x/lib
+          echo "=== ARCore registration hooks ==="
+          python3 - <<'PY'
+          import glob, re
+          paths = glob.glob('x/assets/bin/Data/RuntimeInitializeOnLoads.json')
+          if not paths:
+              print('RuntimeInitializeOnLoads.json NOT FOUND')
+              raise SystemExit(1)
+          raw = open(paths[0], encoding='utf-8', errors='replace').read()
+          total = len(re.findall(r'Unity\.XR\.ARCore', raw))
+          cam = 'ARCoreCameraSubsystem' in raw
+          print(f'Unity.XR.ARCore occurrences: {total}')
+          print(f'ARCoreCameraSubsystem present: {cam}')
+          print('VERDICT:', 'PASS' if total >= 11 and cam else 'FAIL')
+          raise SystemExit(0 if total >= 11 and cam else 1)
+          PY
+          echo "=== chroma shader in the build ==="
+          grep -rl "VideoChromaKey" x/assets/bin/Data 2>/dev/null | head -3 || true
+          sha256sum Builds/CardboardXR.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CardboardXR-apk
+          path: Builds/CardboardXR.apk
+          if-no-files-found: error
+
+      - name: Publish as a release asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="apk-${{ github.run_id }}"
+          cp Builds/CardboardXR.apk "CardboardXR-${{ inputs.version }}.apk"
+          gh release create "$TAG" "CardboardXR-${{ inputs.version }}.apk" \
+            -R "$GITHUB_REPOSITORY" \
+            -t "CardboardXR ${{ inputs.version }} (${{ github.run_id }})" \
+            -n "Official v1.0.0 plus the green-screen key and the stereo-eyes toggle. AR Foundation / ARCore 6.6.2 as shipped." \
+            --latest
+          echo "release: https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG"
