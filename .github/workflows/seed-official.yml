@@ -23,7 +23,7 @@ jobs:
       - name: Clone the upstream tag and push it as a branch
         run: |
           set -eux
-          git clone --depth 1 --branch "${{ inputs.tag }}" https://github.com/brenpoly/CardboardXR.git src
+          git clone --branch "${{ inputs.tag }}" https://github.com/brenpoly/CardboardXR.git src
           cd src
           git -c user.name="CardboardXR Build" -c user.email="build@localhost" checkout -b "${{ inputs.branch }}"
           git remote add target "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
