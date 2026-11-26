@@ -1,0 +1,55 @@
+name: Mirror APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Build run id whose CardboardXR-apk artifact should be mirrored
+        required: true
+        default: "45793712888"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Download the APK from the build run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh run download "${{ inputs.run_id }}" -R "$GITHUB_REPOSITORY" -n CardboardXR-apk -D art
+          APK=$(find art -name '*.apk' | head -1)
+          echo "APK=$APK"
+          ls -l "$APK"
+          sha256sum "$APK"
+
+      - name: Upload to mirror hosts
+        run: |
+          set -x
+          APK=$(find art -name '*.apk' | head -1)
+
+          # gofile.io
+          SERVER=$(curl -s --max-time 30 https://api.gofile.io/servers | python3 -c "import sys,json;print(json.load(sys.stdin)['data']['servers'][0]['name'])" 2>/dev/null)
+          echo "gofile server=$SERVER"
+          if [ -n "$SERVER" ]; then
+            RESP=$(curl -s --max-time 600 -F "file=@$APK" "https://$SERVER.gofile.io/contents/uploadfile")
+            echo "GOFILE_RAW=$RESP" | head -c 1200
+            echo "$RESP" | python3 -c "import sys,json;d=json.load(sys.stdin);print('GOFILE_LINK='+d['data']['downloadPage'])" 2>/dev/null || true
+          fi
+
+          # tmpfiles.org
+          TMP=$(curl -s --max-time 600 -F "file=@$APK" https://tmpfiles.org/api/v1/upload)
+          echo "TMPFILES_RAW=$TMP" | head -c 600
+          echo "$TMP" | python3 -c "import sys,json;u=json.load(sys.stdin)['data']['url'];print('TMPFILES_LINK='+u.replace('/tmpfiles.org/','/tmpfiles.org/dl/'))" 2>/dev/null || true
+
+          # 0x0.st
+          ZERO=$(curl -s --max-time 600 -F "file=@$APK" https://0x0.st)
+          echo "ZEROX0_LINK=$ZERO"
+
+          # bashupload.com
+          BASH=$(curl -s --max-time 600 -T "$APK" https://bashupload.com/ 2>/dev/null | grep -oE "https://bashupload.com/[A-Za-z0-9._/-]+" | head -1)
+          echo "BASHUPLOAD_LINK=$BASH"
