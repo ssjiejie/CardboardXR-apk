@@ -66,6 +66,24 @@ namespace CardboardXR.Stereo
         // viewer's lenses.
         public bool IsMono => m_Mono;
 
+        // How wide and tall each eye sees at one meter, in meters: the lens frustum's size. Passthrough
+        // uses it to cover the eye with the camera image, cropping what falls outside. The wider of the
+        // two eyes' sides is taken for each direction, so the picture covers either one.
+        public Vector2 EyeFrustumSizeAtUnitDistance()
+        {
+            if (m_Lens == null)
+                return Vector2.zero;
+            var halfWidth = 0f;
+            var halfHeight = 0f;
+            for (var i = 0; i < 2; i++)
+            {
+                var fov = m_Lens.GetFieldOfView((Eye)i);
+                halfWidth = Mathf.Max(halfWidth, Mathf.Max(Mathf.Tan(fov.x), Mathf.Tan(fov.y)));
+                halfHeight = Mathf.Max(halfHeight, Mathf.Max(Mathf.Tan(fov.z), Mathf.Tan(fov.w)));
+            }
+            return new Vector2(2f * halfWidth, 2f * halfHeight);
+        }
+
         // Puts both eyes at one point, so nothing the eye cameras draw has any disparity. Passthrough
         // turns it on: its picture is one flat image shown to both eyes at a single depth, and virtual
         // objects drawn with real depth fight it, which is seen as doubling. With the eyes together the
