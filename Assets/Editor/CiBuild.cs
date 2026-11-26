@@ -37,8 +37,8 @@ namespace ProjectBootstrap
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
             // Higher than the official 1.0.0 build (10000) so this installs over it instead of failing
             // with "app not installed".
-            PlayerSettings.Android.bundleVersionCode = 10001;
-            PlayerSettings.bundleVersion = "1.0.1";
+            PlayerSettings.Android.bundleVersionCode = 10002;
+            PlayerSettings.bundleVersion = "1.0.2";
             EnsureXrRuntimeSettings();
             AssetDatabase.SaveAssets();
             Debug.Log($"[CiBuild] configured backend={PlayerSettings.GetScriptingBackend(NamedBuildTarget.Android)} " +
