@@ -56,6 +56,9 @@ namespace CardboardXR.Stereo
         bool m_On;
         // 3DoF turned passthrough off, so it comes back with 6DoF.
         bool m_ResumeWithSixDof;
+        // Keep each eye's own view of the image instead of merging them: the room then sits at the
+        // camera's depth, at the price of a doubled edge where it meets anything drawn nearby.
+        bool m_StereoEyes;
         // ArDebugView drives the AR camera itself.
         bool m_ArViewActive;
         // The image's frustum at unit distance, in the AR camera's x and y, once an image arrived.
@@ -66,6 +69,23 @@ namespace CardboardXR.Stereo
         float m_ShownDistance;
 
         public bool IsOn => m_On;
+
+        // True keeps the eyes apart while passthrough is on, so both see the image from their own
+        // side; false merges them, which is what the flat image wants when something drawn sits in
+        // front of it. Takes effect immediately, and is remembered for the next time it's turned on.
+        public bool StereoEyes
+        {
+            get => m_StereoEyes;
+            set
+            {
+                if (m_StereoEyes == value)
+                    return;
+                m_StereoEyes = value;
+                if (m_On && m_Rig != null)
+                    m_Rig.MonoEyes = !value;
+                Debug.Log($"[Passthrough] Stereo eyes {(value ? "on" : "off")}");
+            }
+        }
 
         // Where the image should be, in meters from the camera, or null for m_Distance. It eases there.
         public float? FocusDistance
@@ -139,7 +159,7 @@ namespace CardboardXR.Stereo
             m_PoseDriver.enabled = on;
             m_Fusion.EyesAtCamera = on;
             if (m_Rig != null)
-                m_Rig.MonoEyes = on;
+                m_Rig.MonoEyes = on && !m_StereoEyes;
             // Shown once the first image has arrived.
             m_Screen.enabled = on && m_HasImage;
             VirtualEnvironment.SetAllHidden(on);
