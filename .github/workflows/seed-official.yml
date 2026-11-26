@@ -1,0 +1,31 @@
+name: Seed official source
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Upstream tag to import
+        required: true
+        default: "v1.0.0"
+      branch:
+        description: Branch to write in this repository
+        required: true
+        default: "v100"
+
+permissions:
+  contents: write
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Clone the upstream tag and push it as a branch
+        run: |
+          set -eux
+          git clone --depth 1 --branch "${{ inputs.tag }}" https://github.com/brenpoly/CardboardXR.git src
+          cd src
+          git -c user.name="CardboardXR Build" -c user.email="build@localhost" checkout -b "${{ inputs.branch }}"
+          git remote add target "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          git -c user.name="CardboardXR Build" -c user.email="build@localhost" push target "${{ inputs.branch }}" --force
+          echo "seeded ${{ inputs.branch }} from ${{ inputs.tag }} at $(git rev-parse HEAD)"
