@@ -60,6 +60,7 @@ namespace CardboardXR.Demos.Video
         M3Button m_EyesButton;
         bool m_Green;
         bool m_StereoEyes;
+        float m_Zoom = 1f;
         TMP_Text m_EmptyMessage;
         readonly List<(M3Button item, TMP_Text supporting)> m_EntryButtons = new();
         int m_Page;
@@ -122,8 +123,43 @@ namespace CardboardXR.Demos.Video
         void Refresh()
         {
             m_Library = VideoLibrary.Find(m_Bundled, out var bundled);
+            // The phone's own gallery comes next, once the player has allowed it: the folder above
+            // needs a cable or a file manager Android no longer lets most of them open.
+            var gallery = VideoGallery.HasAccess ? VideoGallery.FindRecent(40) : new List<VideoEntry>();
+            m_Library.AddRange(gallery);
             m_Page = 0;
-            Debug.Log($"[Video] {m_Library.Count} videos: {bundled} bundled, the rest from {VideoLibrary.VideoFolder}");
+            Debug.Log($"[Video] {m_Library.Count} videos: {bundled} bundled, {gallery.Count} from the gallery, " +
+                      $"the rest from {VideoLibrary.VideoFolder}");
+        }
+
+        // The + on the library: asks for the media permission the first time, then lists what the
+        // phone has, so a video can be watched without copying it in over adb.
+        void AddFromGallery()
+        {
+            if (!VideoGallery.Supported)
+            {
+                Debug.LogWarning("[Video] Adding from the gallery is Android only");
+                return;
+            }
+            if (VideoGallery.HasAccess)
+            {
+                Refresh();
+                UpdateLibraryLabels();
+                return;
+            }
+            StartCoroutine(AllowGalleryThenRefresh());
+        }
+
+        IEnumerator AllowGalleryThenRefresh()
+        {
+            VideoGallery.RequestAccess();
+            // The permission dialog is asynchronous; Android answers within a frame or two of the
+            // tap, and never if the player ignores it.
+            for (var waited = 0f; waited < 20f && !VideoGallery.HasAccess; waited += 0.25f)
+                yield return new WaitForSecondsRealtime(0.25f);
+            Debug.Log($"[Video] Gallery access {(VideoGallery.HasAccess ? "granted" : "not granted")}");
+            Refresh();
+            UpdateLibraryLabels();
         }
 
         // Plays an entry, downloading it first if it's a Drive video not yet in the cache.
@@ -332,7 +368,7 @@ namespace CardboardXR.Demos.Video
 
         // Both pages share one Material panel, k_PanelDistance away, sized to the page showing. Sizes in dp.
         static readonly Vector2 k_LibrarySize = new(600f, 536f);
-        static readonly Vector2 k_ControlsSize = new(600f, 440f);
+        static readonly Vector2 k_ControlsSize = new(600f, 480f);
 
         void BuildPanel()
         {
@@ -342,6 +378,8 @@ namespace CardboardXR.Demos.Video
             m_LibraryPage = WorldUi.CreateGroup("Library", m_Panel);
             M3.Text("Header", m_LibraryPage, "Videos", M3Theme.Type.TitleLarge, new Vector2(-60f, 220f), new Vector2(432f, 32f),
                 alignment: TextAlignmentOptions.Left);
+            M3.IconButton("Add from gallery", m_LibraryPage, "add", M3Button.Variant.Filled, new Vector2(184f, 220f),
+                AddFromGallery);
             M3.IconButton("Refresh", m_LibraryPage, "refresh", M3Button.Variant.Text, new Vector2(248f, 220f), () =>
             {
                 Refresh();
@@ -356,7 +394,10 @@ namespace CardboardXR.Demos.Video
             var folder = Application.platform == RuntimePlatform.IPhonePlayer
                 ? "On a Mac, open the iPhone in Finder, then Files > CardboardXR > Videos, and drag videos in."
                 : $"Copy videos with: adb push video.mp4 {VideoLibrary.VideoFolder}";
-            m_EmptyMessage = M3.Text("Empty", m_LibraryPage, "No videos yet.\n\n" + folder +
+            var add = Application.platform == RuntimePlatform.Android
+                ? "Tap + above to list the videos already on this phone.\n\n"
+                : "";
+            m_EmptyMessage = M3.Text("Empty", m_LibraryPage, "No videos yet.\n\n" + add + folder +
                 "\n\nName tags set the format: _360, _180, _sbs, _tb. For Google Drive, list share links in videos.txt in that folder.",
                 M3Theme.Type.BodyMedium, new Vector2(0f, 16f), new Vector2(520f, 300f), M3Theme.OnSurfaceVariant);
             m_PreviousPage = M3.IconButton("Previous page", m_LibraryPage, "chevron_left", M3Button.Variant.Text, new Vector2(-84f, -212f),
@@ -401,6 +442,18 @@ namespace CardboardXR.Demos.Video
                 new Vector2(-88f, -204f), ToggleGreen, "auto_fix_high", 168f);
             m_EyesButton = M3.Button("Stereo eyes", m_ControlsPage, "Eyes", M3Button.Variant.Tonal,
                 new Vector2(88f, -204f), ToggleStereoEyes, "visibility", 168f);
+            // Zoom, at the ends of the same row: the picture is drawn on a sphere around the head,
+            // so pulling that sphere in is what enlarging the video means here.
+            M3.IconButton("Zoom out", m_ControlsPage, "remove", M3Button.Variant.Tonal, new Vector2(-248f, -204f),
+                () => Zoom(-1));
+            M3.IconButton("Zoom in", m_ControlsPage, "add", M3Button.Variant.Tonal, new Vector2(248f, -204f),
+                () => Zoom(1));
+        }
+
+        void Zoom(int step)
+        {
+            m_Zoom = Mathf.Clamp(m_Zoom + step * 0.25f, VideoSphere.MinZoom, VideoSphere.MaxZoom);
+            m_Sphere.SetZoom(m_Zoom);
         }
 
         void ToggleGreen()
