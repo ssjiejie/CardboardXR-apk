@@ -1,21 +1,19 @@
 // The surface a 360 or 180 video is drawn on, with an optional green-screen key: the green in the
 // picture is cut out, so whatever is behind the sphere shows through where it was, such as the
-// passthrough camera image. Key 0 draws every pixel, as an ordinary unlit video surface does.
+// camera image. Key 0 draws every pixel, as an ordinary unlit video surface does.
 // The same shader draws the camera image behind that sphere: _Rotation turns the frame the way the
 // phone's camera reports it, and _MirrorX flips it for a front camera.
+// No [Tooltip] attributes: the ShaderLab parser failed on them here (parse error at the first one),
+// which left the shader without a name and drew the sphere magenta instead of the video.
 Shader "CardboardXR/VideoChromaKey"
 {
     Properties
     {
         [MainTexture] _BaseMap ("Video", 2D) = "white" {}
         [MainColor] _BaseColor ("Tint", Color) = (1, 1, 1, 1)
-        [Tooltip("How much of the green is cut out: 0 keeps it all, 1 cuts the most.")]
         _ChromaKey ("Green Screen", Range(0, 1)) = 0
-        [Tooltip("How soft the cut edge is: a larger value leaves a wider fringe.")]
         _ChromaSoftness ("Green Screen Edge", Range(0.01, 0.5)) = 0.08
-        [Tooltip("Quarter turns clockwise applied to the picture: 0, 1, 2 or 3. For a camera frame, not a video.")]
         _Rotation ("Rotation", Range(0, 3)) = 0
-        [Tooltip("Flips the picture across, for a front camera.")]
         _MirrorX ("Mirror", Range(0, 1)) = 0
     }
 
@@ -80,12 +78,12 @@ Shader "CardboardXR/VideoChromaKey"
             {
                 float2 uv = input.uv;
                 // Quarter turns, then a flip: what a phone camera reports about its frame.
-                int quarter = (int)round(_Rotation);
-                if (quarter == 1)
+                float quarter = floor(_Rotation + 0.5);
+                if (quarter > 0.5 && quarter < 1.5)
                     uv = float2(uv.y, 1.0 - uv.x);
-                else if (quarter == 2)
+                else if (quarter > 1.5 && quarter < 2.5)
                     uv = float2(1.0 - uv.x, 1.0 - uv.y);
-                else if (quarter == 3)
+                else if (quarter > 2.5 && quarter < 3.5)
                     uv = float2(1.0 - uv.y, uv.x);
                 if (_MirrorX > 0.5)
                     uv.x = 1.0 - uv.x;
