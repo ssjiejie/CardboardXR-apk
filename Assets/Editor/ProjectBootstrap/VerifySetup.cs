@@ -130,9 +130,12 @@ namespace ProjectBootstrap
             Expect(names != null && names.Any(n => n.Contains("ARCore")),
                 $"Android XR loaders include ARCore (found: {(names == null ? "none" : string.Join(",", names))})");
 
+            // Not a gate: the project's preloadedAssets list is empty and the published build works,
+            // because XR Plug-in Management's build processor adds the settings during the build. The
+            // editor state before a build says nothing about the player. Logged for the record only.
             var preloaded = PlayerSettings.GetPreloadedAssets().Where(a => a != null).ToList();
-            Expect(preloaded.Any(a => a is XRGeneralSettings),
-                $"XR general settings is a preloaded asset (preloaded: {preloaded.Count})");
+            Debug.Log($"[Verify]     preloaded assets before build: {preloaded.Count} " +
+                      $"(XR settings are added by the XR build processor, so 0 here is normal)");
         }
 
         static void CheckPlayer()
