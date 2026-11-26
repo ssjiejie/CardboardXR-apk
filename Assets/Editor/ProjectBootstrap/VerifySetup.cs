@@ -205,8 +205,18 @@ namespace ProjectBootstrap
             }
             Expect(Object.FindObjectsByType<PassthroughController>(FindObjectsInactive.Include,
                 FindObjectsSortMode.None).Length > 0, "Video.unity has a PassthroughController");
-            Expect(Object.FindObjectsByType<VideoDemo>(FindObjectsInactive.Include,
-                FindObjectsSortMode.None).Length > 0, "Video.unity has a VideoDemo");
+            var demo = Object.FindObjectsByType<VideoDemo>(FindObjectsInactive.Include,
+                FindObjectsSortMode.None).FirstOrDefault();
+            Expect(demo != null, "Video.unity has a VideoDemo");
+            if (demo != null)
+            {
+                // The three buttons write through this reference; null here is a NullReferenceException
+                // the moment one of them is tapped.
+                var so = new SerializedObject(demo);
+                var sphere = so.FindProperty("m_Sphere");
+                Expect(sphere != null && sphere.objectReferenceValue != null,
+                    "VideoDemo has its VideoSphere wired");
+            }
             Debug.Log($"[Verify] scene roots: {string.Join(", ", scene.GetRootGameObjects().Select(g => g.name))}");
             EditorSceneManager.CloseScene(scene, true);
         }
