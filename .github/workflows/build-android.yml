@@ -1,0 +1,53 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ feat/video-fixes ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Unity 6000.6.8f1 · Android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Put the Unity license where the editor looks
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        run: |
+          mkdir -p unity-license
+          printf '%s' "$UNITY_LICENSE" > unity-license/UnityEntitlementLicense.xml
+          ls -la unity-license
+          head -c 120 unity-license/UnityEntitlementLicense.xml; echo
+
+      - name: Build the APK inside the Unity image
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          docker run --rm \
+            -e UNITY_EMAIL -e UNITY_PASSWORD \
+            -v "$PWD":/project \
+            -v "$PWD/unity-license":/root/.config/unity3d/Unity/licenses \
+            -w /project \
+            unityci/editor:ubuntu-6000.6.8f1-android-3 \
+            /bin/bash -lc '/opt/unity/Editor/Unity -batchmode -nographics -projectPath /project -buildTarget Android -username "$UNITY_EMAIL" -password "$UNITY_PASSWORD" -executeMethod ProjectBootstrap.StereoBuilder.BuildAndroid -logFile /project/build.log; echo "UNITY_EXIT=$?"'
+          echo "== build log tail =="
+          tail -100 build.log || true
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CardboardXR-APK
+          path: Builds/CardboardXR.apk
+          if-no-files-found: error

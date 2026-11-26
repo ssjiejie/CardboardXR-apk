@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Unity's own main manifest, plus the picker Activity VideoImporter starts. Everything else
+     (permissions, ARCore, libraries) is merged in from the packages' own manifests, as before. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.brenpoly.cardboardxr">
+
+    <application android:label="@string/app_name" android:icon="@mipmap/app_icon">
+
+        <activity android:name="com.unity3d.player.UnityPlayerGameActivity"
+            android:theme="@style/UnityThemeSelector"
+            android:screenOrientation="fullSensor"
+            android:launchMode="singleTask"
+            android:configChanges="mcc|mnc|locale|touchscreen|keyboard|keyboardHidden|navigation|orientation|screenLayout|uiMode|screenSize|smallestScreenSize|fontScale|density|layoutDirection"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="unityplayer.UnityActivity" android:value="true" />
+        </activity>
+
+        <!-- Opens the gallery's picker, copies the video into the app's Videos folder and calls back,
+             then closes. Invisible: a translucent, title-less, recent-less activity. -->
+        <activity android:name="com.brenpoly.cardboardxr.VideoImportActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:exported="false"
+            android:excludeFromRecents="true" />
+    </application>
+</manifest>

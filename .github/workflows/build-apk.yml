@@ -1,0 +1,98 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      # IL2CPP writes libil2cpp.so twice (once as the detached debug symbol file) and an ARM64
+      # build needs roughly 32 GB of scratch space. An earlier run died with "No space left on
+      # device" while copying Library/Bee/artifacts/.../libil2cpp.dbg.so on a disk with 33 GB free,
+      # so reclaim the toolchains this build never touches first.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android /usr/local/share/boost \
+            /opt/hostedtoolcache/CodeQL /usr/share/swift /usr/lib/jvm /opt/microsoft /opt/az \
+            /opt/google/chrome /usr/local/lib/node_modules /usr/local/share/powershell \
+            /usr/share/miniconda /opt/pipx || true
+          sudo apt-get clean || true
+          df -h /
+
+      - name: Restore machine identity and licence
+        run: |
+          echo "576562626572264761624c65526f7578" | sudo tee /etc/machine-id
+          mkdir -p lic
+          echo "${{ secrets.UNITY_ENTITLEMENT }}" | base64 -d > lic/UnityEntitlementLicense.xml
+          rm -rf Builds build.log
+          ls -l lic/
+
+      - name: Pull Unity image
+        run: docker pull unityci/editor:ubuntu-6000.6.8f1-android-3
+
+      # The repository's own release entry point (Tools/release_android.sh runs exactly this
+      # method). CARDBOARDXR_VERSION is the variable that script sets: it stamps the version and
+      # a rising version code (1.3.0 -> 10300), so the APK installs over the older builds.
+      # Nothing here changes the graphics API, stripping, code generation or XR preload: the
+      # 6000.6.8f1 + AR Foundation 6.6.2 combination in this branch is the one that registers
+      # the ARCore subsystems and shows the camera.
+      #
+      # The 2 GB /dev/shm is not optional: Docker's 64 MB default made Unity abort with
+      # "Requested 1073741824 bytes, but only 67108864 bytes available" on an earlier run.
+      - name: Build APK
+        run: |
+          docker run --rm \
+            --hostname 846694108c80 \
+            --shm-size=2g \
+            -e CARDBOARDXR_VERSION=1.3.0 \
+            -v /etc/machine-id:/etc/machine-id:ro \
+            -v "$PWD":/project \
+            -v "$PWD/lic":/root/.config/unity3d/Unity/licenses \
+            -w /project \
+            unityci/editor:ubuntu-6000.6.8f1-android-3 \
+            bash -c '
+              /opt/unity/Editor/Data/Resources/Licensing/Client/Unity.Licensing.Client > /tmp/lic.log 2>&1 &
+              sleep 10
+              tail -20 /tmp/lic.log
+
+              /opt/unity/Editor/Unity -batchmode -nographics -quit \
+                -projectPath /project \
+                -buildTarget Android \
+                -executeMethod ProjectBootstrap.StereoBuilder.BuildAndroid \
+                -logFile /project/build.log
+              rc=$?
+              echo "UNITY_EXIT=$rc"
+              exit $rc
+            '
+
+      - name: Build log tail
+        if: always()
+        run: |
+          grep -a -E "\[Build\]|\[CiBuild\]|error CS|Build Succeeded|Build Failed" build.log | head -40 2>/dev/null || true
+          tail -40 build.log 2>/dev/null || echo "no build.log"
+          df -h /
+
+      - name: Upload build log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: ignore
+          retention-days: 3
+
+      - name: Verify APK produced
+        run: |
+          ls -lh Builds/ || true
+          test -f Builds/CardboardXR.apk || { echo "::error::no APK produced"; exit 1; }
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CardboardXR-apk
+          path: Builds/CardboardXR.apk
+          if-no-files-found: error
