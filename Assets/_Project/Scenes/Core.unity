@@ -4800,6 +4800,7 @@ MonoBehaviour:
   m_Toggle: {fileID: 1168128948}
   m_Distance: 2
   m_TextureHeight: 720
+  m_SettingsPanel: {fileID: 807731573}
 --- !u!114 &1208396641
 MonoBehaviour:
   m_ObjectHideFlags: 0

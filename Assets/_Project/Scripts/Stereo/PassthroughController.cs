@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem.XR;
 using UnityEngine.Rendering;
 using CardboardXR.UI;
+using TMPro;
 using UnityEngine.XR.ARFoundation;
 
 namespace CardboardXR.Stereo
@@ -51,6 +52,13 @@ namespace CardboardXR.Stereo
                  "size, a window with a border around it. The fill is worked out from the viewer's eyes.")]
         [SerializeField] float m_Zoom;
 
+        [Tooltip("The settings panel: the camera image's size is adjusted from a row on it, next to Close.")]
+        [SerializeField] RectTransform m_SettingsPanel;
+        [Tooltip("How much one tap of the image's - or + changes its size.")]
+        [SerializeField] float m_ZoomStep = 0.2f;
+        [Tooltip("The smallest and largest the image can be drawn, as a multiple of the camera's own view.")]
+        [SerializeField] Vector2 m_ZoomLimits = new(0.5f, 4f);
+
         ARCameraManager m_CameraManager;
         TrackedPoseDriver m_PoseDriver;
         Material m_CameraMaterial;
@@ -71,6 +79,10 @@ namespace CardboardXR.Stereo
         bool m_HasImage;
         float? m_FocusDistance;
         float m_ShownDistance;
+        // The size row on the settings panel, made when the app starts rather than authored there.
+        M3Button m_ZoomOutButton;
+        M3Button m_ZoomInButton;
+        TMP_Text m_ZoomLabel;
 
         public bool IsOn => m_On;
 
@@ -110,6 +122,11 @@ namespace CardboardXR.Stereo
             set => m_Zoom = Mathf.Max(0f, value);
         }
 
+        // What is actually drawn: while Zoom is 0, the enlargement that fills an eye, worked out from
+        // the camera image and the viewer's eyes. The size row starts from this, so its first tap
+        // changes the picture by one step rather than jumping from the fill to a small multiple.
+        public float EffectiveZoom => ShownZoom();
+
         // The enlargement actually drawn: the set one, or the one that covers an eye, cropping the
         // edges. The camera sees less than a Cardboard eye, so at its own size the image is a window
         // with a border of nothing around it; filling the eye is what removes the border.
@@ -138,6 +155,57 @@ namespace CardboardXR.Stereo
             m_ArViewActive = LaunchOptions.GetInt("arView", 0) != 0;
             if (LaunchOptions.GetInt("passthrough", 0) != 0)
                 SetPassthrough(true);
+            BuildZoomControls();
+        }
+
+        // A row on the settings panel: - 1.5x +, for the size of the camera image. Built here rather
+        // than authored in the scene because the panel is one toolbar row of hand-placed items; the
+        // panel is made taller to hold this row, and Close moves to the right to leave it the middle.
+        void BuildZoomControls()
+        {
+            if (m_SettingsPanel == null || m_ZoomInButton != null)
+                return;
+            m_SettingsPanel.sizeDelta = new Vector2(m_SettingsPanel.sizeDelta.x, 200f);
+            if (m_SettingsPanel.Find("Close") is RectTransform close)
+                close.anchoredPosition = new Vector2(200f, -76f);
+
+            m_ZoomOutButton = M3.Button("Camera zoom out", m_SettingsPanel, "-", M3Button.Variant.Tonal,
+                new Vector2(-110f, -76f), () => StepZoom(-1f), null, 56f);
+            m_ZoomLabel = M3.Text("Camera zoom label", m_SettingsPanel, "", M3Theme.Type.LabelLarge,
+                new Vector2(0f, -76f), new Vector2(100f, 24f), M3Theme.OnSurfaceVariant);
+            m_ZoomInButton = M3.Button("Camera zoom in", m_SettingsPanel, "+", M3Button.Variant.Tonal,
+                new Vector2(110f, -76f), () => StepZoom(1f), null, 56f);
+            UpdateZoomLabel();
+        }
+
+        // One step larger or smaller than what is drawn now, so the first tap moves the picture by
+        // one step instead of snapping from the eye-filling size to an arbitrary multiple.
+        void StepZoom(float direction)
+        {
+            var step = Mathf.Max(0.01f, Mathf.Abs(m_ZoomStep));
+            var low = Mathf.Min(m_ZoomLimits.x, m_ZoomLimits.y);
+            var high = Mathf.Max(m_ZoomLimits.x, m_ZoomLimits.y);
+            m_Zoom = Mathf.Clamp(ShownZoom() + direction * step, low, high);
+            UpdateZoomLabel();
+            Debug.Log($"[Passthrough] Camera image at {m_Zoom:F2}x of the camera's view");
+        }
+
+        void UpdateZoomLabel()
+        {
+            if (m_ZoomLabel != null)
+                m_ZoomLabel.text = $"{ShownZoom():F2}x";
+        }
+
+        void Update()
+        {
+            // The fill depends on the camera image and the eyes, both of which arrive after the panel
+            // is built; keep the read-out showing what is actually drawn.
+            if (m_ZoomLabel != null && m_SettingsPanel != null && m_SettingsPanel.gameObject.activeInHierarchy)
+            {
+                var text = $"{ShownZoom():F2}x";
+                if (m_ZoomLabel.text != text)
+                    m_ZoomLabel.text = text;
+            }
         }
 
         void OnDestroy()
