@@ -31,8 +31,9 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _ChromaKey: 0.55
-    - _ChromaSoftness: 0.08
+    - _ChromaKey: 0
+    - _Tolerance: 0.6
+    - _ChromaSoftness: 0.06
     - _MirrorX: 0
     - _Rotation: 0
     m_Colors:

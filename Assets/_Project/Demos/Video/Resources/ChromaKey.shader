@@ -12,7 +12,8 @@ Shader "CardboardXR/VideoChromaKey"
         [MainTexture] _BaseMap ("Video", 2D) = "white" {}
         [MainColor] _BaseColor ("Tint", Color) = (1, 1, 1, 1)
         _ChromaKey ("Green Screen", Range(0, 1)) = 0
-        _ChromaSoftness ("Green Screen Edge", Range(0.01, 0.5)) = 0.08
+        _Tolerance ("Green Tolerance", Range(0, 1)) = 0.6
+        _ChromaSoftness ("Green Screen Edge", Range(0.01, 0.5)) = 0.06
         _Rotation ("Rotation", Range(0, 3)) = 0
         _MirrorX ("Mirror", Range(0, 1)) = 0
     }
@@ -49,6 +50,7 @@ Shader "CardboardXR/VideoChromaKey"
                 float4 _BaseMap_ST;
                 half4 _BaseColor;
                 float _ChromaKey;
+                float _Tolerance;
                 float _ChromaSoftness;
                 float _Rotation;
                 float _MirrorX;
@@ -74,6 +76,17 @@ Shader "CardboardXR/VideoChromaKey"
                 return output;
             }
 
+            // How much this colour reads as green, 0 to 1. Measured against the green itself rather
+            // than as a plain difference, so a shadowed green screen (0.12, 0.20, 0.12) counts as
+            // green just like a lit one (0.1, 0.8, 0.1). A difference alone left the dim parts of a
+            // screen behind, which is most of what "the key misses some green" was.
+            half Greenness(half3 color)
+            {
+                half green = color.g;
+                half others = max(color.r, color.b);
+                return saturate((green - others) / max(green, 0.06));
+            }
+
             half4 frag(Varyings input) : SV_Target
             {
                 float2 uv = input.uv;
@@ -91,12 +104,19 @@ Shader "CardboardXR/VideoChromaKey"
                 half4 color = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uv) * _BaseColor;
                 if (_ChromaKey > 0.001)
                 {
-                    // How far the green channel leads both others: high on a green screen, near zero
-                    // on skin and clothes. The cut level falls as the knob rises, so more is removed.
-                    half green = color.g - max(color.r, color.b);
-                    half cut = lerp(0.65, 0.06, saturate(_ChromaKey));
-                    half keep = 1.0 - smoothstep(cut, cut + max(_ChromaSoftness, 0.01), green);
-                    clip(keep - 0.02);
+                    // Tolerance sets the bar: at 0 only a saturated screen goes, at 1 even a faint
+                    // green cast does. 0.6 clears a lit screen and leaves skin and khaki alone.
+                    half cut = lerp(0.42, 0.04, saturate(_Tolerance));
+                    half soft = max(_ChromaSoftness, 0.02);
+                    half keep = 1.0 - smoothstep(cut, cut + soft, Greenness(color.rgb));
+                    // Cut halfway through the edge: clipping at keep > 0.02, as this did, let every
+                    // faintly green pixel draw in full, which is what left a green haze behind.
+                    clip(keep - 0.5);
+
+                    // Spill: the green light a screen throws on hair and shoulders. Pull the green
+                    // back towards the other channels on what stays, more of it at higher tolerance.
+                    half spill = Greenness(color.rgb) * saturate(0.5 + 0.5 * _Tolerance);
+                    color.g = lerp(color.g, min(color.g, max(color.r, color.b) + 0.02), spill * 0.9);
                 }
                 return half4(color.rgb, 1.0);
             }

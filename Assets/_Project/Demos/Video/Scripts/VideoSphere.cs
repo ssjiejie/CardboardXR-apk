@@ -26,10 +26,16 @@ namespace CardboardXR.Demos.Video
         // Resources.Load<Shader> had its variants stripped from the build, which turned the sphere
         // magenta the moment the key was switched on. The material asset keeps them.
         const string k_ChromaAssetName = "ChromaKey";
-        // How much green is cut when the key is on: high enough to remove a lit green screen, low
-        // enough to leave skin and dark clothes alone.
-        const float k_ChromaStrength = 0.55f;
+        // The key is a switch at 1; how much green it takes is _Tolerance, set from the panel's
+        // slider rather than fixed here.
+        const float k_ChromaStrength = 1f;
         static readonly int k_ChromaKeyId = Shader.PropertyToID("_ChromaKey");
+        static readonly int k_ToleranceId = Shader.PropertyToID("_Tolerance");
+
+        // How much of the screen's green is cut: 0 takes only a saturated screen, 1 takes any green
+        // cast with it. 0.6 is a lit screen, and still leaves skin and khaki alone.
+        public const float DefaultTolerance = 0.6f;
+        float m_Tolerance = DefaultTolerance;
 
         readonly MeshRenderer[] m_Eyes = new MeshRenderer[2];
         readonly Material[] m_Materials = new Material[2];
@@ -143,12 +149,27 @@ namespace CardboardXR.Demos.Video
             {
                 material.shader = on ? m_ChromaShader : m_Material.shader;
                 if (on)
+                {
                     material.SetFloat(k_ChromaKeyId, k_ChromaStrength);
+                    material.SetFloat(k_ToleranceId, m_Tolerance);
+                }
                 PutTextureOn(material);
             }
             Debug.Log($"[Video] Green screen {(on ? "on" : "off")}");
             return true;
         }
+
+        // How much green the key takes, 0 to 1. Safe while a video plays: the frame already on
+        // screen is drawn by the same shader with the new value on the next one.
+        public void SetTolerance(float tolerance)
+        {
+            m_Tolerance = Mathf.Clamp01(tolerance);
+            foreach (var material in m_Materials)
+                material.SetFloat(k_ToleranceId, m_Tolerance);
+            Debug.Log($"[Video] Green tolerance {m_Tolerance:P0}");
+        }
+
+        public float Tolerance => m_Tolerance;
 
         // Enlarges the picture (>1) or shrinks it (<1). The sphere is drawn around the head, so
         // moving it closer changes nothing on screen: every direction the eye looks maps to the same

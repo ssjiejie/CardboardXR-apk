@@ -16,16 +16,16 @@ namespace CardboardXR.Demos.Video
     {
         static readonly string[] k_Extensions = { ".mp4", ".mov", ".m4v", ".mkv", ".webm", ".3gp" };
 
-        // Where cameras, downloads and chat apps leave videos. Relative to the shared storage root.
-        static readonly string[] k_Folders =
-        {
-            "DCIM", "Movies", "Download", "Downloads", "Pictures", "Video",
-            "DCIM/Camera", "Movies/WeiXin", "Pictures/WeiXin", "Movies/WhatsApp",
-        };
+        // Where cameras, downloads and chat apps leave videos. The scan starts at the top of shared
+        // storage and walks every folder under it, because videos end up wherever the app that
+        // saved them put them; a shortlist of camera folders missed most of a phone's videos.
+        // Android's own tree is skipped: what's inside can't be read, and walking it is slow.
+        static readonly string[] k_SkipNames = { "Android", "LOST.DIR", "obb", "cache", "Cache", "code_cache" };
 
-        // Deep enough for DCIM/Camera/IMG_0001.mp4, shallow enough to skip app caches.
-        const int k_MaxDepth = 3;
-        const int k_MaxFiles = 400;
+        // Deep enough for a folder a few levels into an app's own tree, shallow enough to skip the
+        // caches inside them.
+        const int k_MaxDepth = 6;
+        const int k_MaxFiles = 1500;
 
         public static bool Supported => Application.platform == RuntimePlatform.Android;
 
@@ -98,12 +98,8 @@ namespace CardboardXR.Demos.Video
 
             var found = new List<(string path, DateTime time)>();
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var folder in k_Folders)
-            {
-                Collect(Path.Combine(root, folder), 0, seen, found);
-                if (found.Count >= k_MaxFiles)
-                    break;
-            }
+            foreach (var folder in Folders(root))
+                Collect(folder, 0, seen, found);
 
             found.Sort((a, b) => b.time.CompareTo(a.time));
             for (var i = 0; i < found.Count && entries.Count < max; i++)
@@ -186,28 +182,78 @@ namespace CardboardXR.Demos.Video
             }
         }
 
+        // Every place worth looking in: the top of shared storage, plus any SD card mounted beside
+        // it. Collect walks each one, skipping the folders listed above as it goes.
+        static List<string> Folders(string root)
+        {
+            var folders = new List<string> { root };
+            try
+            {
+                foreach (var volume in Directory.GetDirectories("/storage"))
+                {
+                    var name = Path.GetFileName(volume);
+                    // emulated is the internal storage already listed; self is how the app sees it.
+                    if (name.Equals("emulated", StringComparison.OrdinalIgnoreCase) ||
+                        name.Equals("self", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(volume, root, StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    folders.Add(volume);
+                }
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException)
+            {
+            }
+            return folders;
+        }
+
+        static bool ShouldSkip(string name) =>
+            name.Length == 0 || name[0] == '.' || Array.IndexOf(k_SkipNames, name) >= 0;
+
         static void Collect(string folder, int depth, HashSet<string> seen, List<(string path, DateTime time)> found)
         {
             if (depth > k_MaxDepth || found.Count >= k_MaxFiles)
                 return;
+
+            string[] files;
             try
             {
-                if (!Directory.Exists(folder))
-                    return;
-                foreach (var file in Directory.EnumerateFiles(folder))
-                {
-                    if (!IsVideo(file) || !seen.Add(file))
-                        continue;
-                    found.Add((file, File.GetLastWriteTimeUtc(file)));
-                    if (found.Count >= k_MaxFiles)
-                        return;
-                }
-                foreach (var child in Directory.EnumerateDirectories(folder))
-                    Collect(child, depth + 1, seen, found);
+                files = Directory.GetFiles(folder);
             }
-            // A folder the phone keeps private, or one that vanished mid-scan, is simply skipped.
             catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException)
             {
+                return;
+            }
+            foreach (var file in files)
+            {
+                if (found.Count >= k_MaxFiles)
+                    return;
+                if (!IsVideo(file) || !seen.Add(file))
+                    continue;
+                // A file that vanished under the scan is skipped, not fatal to the folder.
+                try
+                {
+                    found.Add((file, File.GetLastWriteTimeUtc(file)));
+                }
+                catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException)
+                {
+                }
+            }
+
+            string[] children;
+            try
+            {
+                children = Directory.GetDirectories(folder);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException)
+            {
+                return;
+            }
+            foreach (var child in children)
+            {
+                if (found.Count >= k_MaxFiles)
+                    return;
+                if (!ShouldSkip(Path.GetFileName(child)))
+                    Collect(child, depth + 1, seen, found);
             }
         }
 

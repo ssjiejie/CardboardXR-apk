@@ -60,10 +60,13 @@ namespace CardboardXR.Demos.Video
         M3Button m_CamButton;
         M3Button m_EyesButton;
         TMP_Text m_ZoomLabel;
+        M3Slider m_ToleranceSlider;
+        TMP_Text m_ToleranceLabel;
         CameraBackdrop m_Backdrop;
         bool m_Green;
         bool m_StereoEyes;
         float m_Zoom = 1f;
+        float m_Tolerance = VideoSphere.DefaultTolerance;
         bool m_Scanning;
         TMP_Text m_EmptyMessage;
         string m_EmptyText;
@@ -93,6 +96,7 @@ namespace CardboardXR.Demos.Video
                 m_Backdrop = new GameObject("Camera Backdrop").AddComponent<CameraBackdrop>();
 
             BuildPanel();
+            SetTolerance(m_Tolerance);
             Refresh();
             ShowLibrary();
         }
@@ -160,7 +164,7 @@ namespace CardboardXR.Demos.Video
             m_Scanning = true;
             if (m_EmptyMessage != null)
                 m_EmptyMessage.text = "Looking through this phone's videos…";
-            VideoGallery.FindRecentAsync(40, gallery =>
+            VideoGallery.FindRecentAsync(150, gallery =>
             {
                 // The demo may have been left, and this object destroyed, before the scan finished.
                 if (this == null)
@@ -413,7 +417,7 @@ namespace CardboardXR.Demos.Video
 
         // Both pages share one Material panel, k_PanelDistance away, sized to the page showing. Sizes in dp.
         static readonly Vector2 k_LibrarySize = new(600f, 536f);
-        static readonly Vector2 k_ControlsSize = new(600f, 560f);
+        static readonly Vector2 k_ControlsSize = new(600f, 680f);
 
         void BuildPanel()
         {
@@ -499,6 +503,27 @@ namespace CardboardXR.Demos.Video
             m_ZoomLabel = M3.Text("Zoom label", m_ControlsPage, "1.00x", M3Theme.Type.LabelLarge, new Vector2(0f, -236f),
                 new Vector2(160f, 24f), M3Theme.OnSurfaceVariant);
             M3.Button("Zoom in", m_ControlsPage, "+", M3Button.Variant.Tonal, new Vector2(140f, -236f), () => Zoom(1), null, 72f);
+
+            // Green tolerance: how much of the screen's green the key takes. A slider rather than a
+            // fixed level, because one level that clears a bright screen leaves a dim or uneven one
+            // half green, and the level that clears that one starts eating skin and clothes.
+            M3.Text("Tolerance label", m_ControlsPage, "Tolerance", M3Theme.Type.BodyMedium, new Vector2(-212f, -300f),
+                new Vector2(120f, 24f), M3Theme.OnSurfaceVariant, TextAlignmentOptions.Left);
+            m_ToleranceSlider = M3.Slider("Tolerance", m_ControlsPage, new Vector2(24f, -300f), 300f);
+            m_ToleranceSlider.Value = m_Tolerance;
+            m_ToleranceSlider.Clicked += SetTolerance;
+            m_ToleranceLabel = M3.Text("Tolerance value", m_ControlsPage, "60%", M3Theme.Type.LabelLarge,
+                new Vector2(244f, -300f), new Vector2(80f, 24f), M3Theme.OnSurfaceVariant);
+        }
+
+        void SetTolerance(float tolerance)
+        {
+            m_Tolerance = Mathf.Clamp01(tolerance);
+            m_Sphere.SetTolerance(m_Tolerance);
+            if (m_ToleranceSlider != null)
+                m_ToleranceSlider.Value = m_Tolerance;
+            if (m_ToleranceLabel != null)
+                m_ToleranceLabel.text = $"{Mathf.RoundToInt(m_Tolerance * 100f)}%";
         }
 
         void Zoom(int step)
