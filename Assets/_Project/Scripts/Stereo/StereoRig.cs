@@ -43,11 +43,11 @@ namespace CardboardXR.Stereo
         [Tooltip("The vertical field of view in mono, in degrees. The viewer's own is far wider, which " +
                  "only makes sense seen through its lenses.")]
         [SerializeField, Range(30f, 120f)] float m_MonoFieldOfView = 60f;
-        [Tooltip("Stretch each eye's picture over the whole of its half of the screen. The lens mesh " +
-                 "only covers as much of the screen as the viewer's field of view reaches, which " +
-                 "leaves a black border around each eye when the picture is watched without the " +
-                 "viewer, or on a phone that reports its screen size wrongly. The \"fill\" launch " +
-                 "option overrides it.")]
+        [Tooltip("Stretch each eye's picture to the width of the lenses' separation, centred on that " +
+                 "eye's optical axis. That is as wide as the two pictures can be without meeting in " +
+                 "the middle and crossing into the other eye, and it puts their axes exactly the " +
+                 "lens separation apart, which is what the eyes need to fuse them. The \"fill\" " +
+                 "launch option overrides it.")]
         [SerializeField] bool m_FillEyes = true;
 
         readonly Camera[] m_EyeCameras = new Camera[2];
@@ -61,14 +61,15 @@ namespace CardboardXR.Stereo
         Texture2D m_MarkerTexture;
         GameObject m_Compositor;
         LensDistortion m_Lens;
-        // How much of its half of the screen each eye's picture takes: 1 fills it edge to edge, as it
-        // always has, and 0.6 leaves black around a smaller picture. Above 1 the window is already as
-        // big as its half allows — the two would meet and cross in the middle — so the picture inside
-        // it is enlarged instead, cropping its edges. Set from the settings panel.
+        // How big each eye's picture is against the width of the lens separation: 1 is that width,
+        // the widest the two can be and still fuse, and 0.6 leaves black around a smaller picture.
+        // Above 1 the window is already as wide as the lenses allow — the two would meet in the
+        // middle — so the picture inside it is enlarged instead, cropping its edges. Set from the
+        // settings panel.
         float m_WindowScale = 1f;
-        // The meshes as they were built, where each eye's optical axis sits on the screen once the
-        // fill has moved it, and where it sits on the eye texture. Every scale is worked out from
-        // these, so stepping up and down never accumulates rounding, and 1 puts them back as is.
+        // The meshes as built — the width of the lens separation, about the optical axis — where that
+        // axis sits on the screen, and where it sits on the eye texture. Every scale is worked out
+        // from these, so stepping up and down never accumulates rounding, and 1 puts them back.
         Vector3[][] m_BaseVertices;
         Vector2[][] m_BaseUvs;
         Vector2[] m_WindowCenters;
@@ -96,11 +97,12 @@ namespace CardboardXR.Stereo
             return new Vector2(2f * halfWidth, 2f * halfHeight);
         }
 
-        // How much of its half of the screen each eye's picture takes. Below 1 the whole window — the
-        // lens outline and the picture in it — shrinks toward the eye's optical axis, and black shows
-        // around it. Above 1 there's nowhere for the window to grow to, so the picture inside the
-        // full-size window is enlarged instead. The lens coefficients, eye offsets and frustums are
-        // never touched; only where the meshes' vertices land on the screen.
+        // How big each eye's picture is against the width of the lens separation. Below 1 the whole
+        // window — the lens outline and the picture in it — shrinks toward the eye's optical axis, and
+        // black shows around it. Above 1 there's nowhere for the window to grow to without crossing
+        // into the other eye, so the picture inside the full-size window is enlarged instead. The lens
+        // coefficients, eye offsets and frustums are never touched; only where the meshes' vertices
+        // land on the screen.
         public void SetWindowScale(float scale)
         {
             m_WindowScale = Mathf.Clamp(Mathf.Round(scale * 10f) / 10f, 0.6f, 2f);
@@ -147,10 +149,10 @@ namespace CardboardXR.Stereo
             }
         }
 
-        // Keeps a mesh as built, and the point it has to be scaled about: the eye's optical axis,
-        // carried through the same move the fill made. Scaling about the middle of the mesh instead
-        // slides the axis outwards as the picture shrinks, by a different amount in each eye, and the
-        // two eyes then no longer line up.
+        // Keeps a mesh as built, and the point it has to be scaled about: the eye's optical axis. The
+        // window is already centred on it, so shrinking keeps it there. Scaling about the middle of
+        // the mesh would slide the axis outwards as the picture shrinks, by a different amount in each
+        // eye, and the two eyes would no longer line up.
         void KeepAsBase(int index, Eye eye, Vector2 windowCenter)
         {
             var mesh = m_Meshes[index];
@@ -370,11 +372,19 @@ namespace CardboardXR.Stereo
             {
                 var eye = (Eye)i;
                 m_Meshes[i] = m_Lens.CreateDistortionMesh(eye);
-                // The point the picture will be scaled about, before and after the fill moves it.
+                // The lens separation is as wide as the two pictures can be without meeting in the
+                // middle, and it makes the distance between their axes the one the eyes are set to.
                 var axis = m_Lens.GetOpticalCenterNdc(eye);
-                var windowCenter = m_FillEyes ? FillEye(m_Meshes[i], eye, axis) : axis;
-                KeepAsBase(i, eye, windowCenter);
-                Debug.Log($"[Zoom] {eye} axis NDC {axis} center {windowCenter} uv {m_UvCenters[i]}");
+                var windowWidth = 2f * m_Lens.Viewer.interLensDistance / screenSize.x;
+                if (m_FillEyes)
+                {
+                    FitToLens(m_Meshes[i], axis, windowWidth);
+                    var inner = axis.x + (eye == Eye.Left ? windowWidth : -windowWidth) * 0.5f;
+                    Debug.Assert(eye == Eye.Left ? inner <= 1e-3f : inner >= -1e-3f,
+                        $"{eye} picture crosses the middle of the screen; the eyes can't fuse it.");
+                }
+                KeepAsBase(i, eye, axis);
+                Debug.Log($"[Zoom] {eye} axis NDC {axis.x:F4},{axis.y:F4} width {windowWidth:F4} uv {m_UvCenters[i]}");
                 m_Materials[i] = new Material(m_DistortionShader)
                 {
                     name = $"{eye} Distortion",
@@ -387,55 +397,39 @@ namespace CardboardXR.Stereo
                 CreateAlignmentMarker(screenSize);
         }
 
-        // Scales a distortion mesh so its bounding box covers the eye's whole half of the screen, and
-        // no more: the picture keeps its proportions and the edges that fall outside are cropped.
-        // The mesh is laid out from the viewer's field of view and the phone's physical screen size,
-        // and Android only reports a DPI for that, which many phones get wrong; a size that comes out
-        // too small shrinks the picture to a patch in the middle. Filling the half makes it reach the
-        // edges whatever the phone claims to measure. Returns where the eye's optical axis ends up,
-        // since that is the point a later size change has to scale about.
-        static Vector2 FillEye(Mesh mesh, Eye eye, Vector2 opticalCenter)
+        // Puts a distortion mesh about its eye's optical axis, as wide as the lenses are apart. That
+        // is the widest the two pictures can be: any wider and their inner edges cross the middle of
+        // the screen, where both would be drawn and one would cover the other. It also makes the
+        // distance between the two axes the lens separation, which is what the eyes are set to, so
+        // the same point of the scene lands on the same spot of both retinas and the two pictures
+        // fuse. The width the mesh arrives at isn't relied on: it comes from the viewer's field of
+        // view and the phone's physical screen size, and Android only reports a DPI for that, which
+        // many phones get wrong.
+        static void FitToLens(Mesh mesh, Vector2 axis, float windowWidth)
         {
             var vertices = mesh.vertices;
             var minX = float.MaxValue;
             var maxX = float.MinValue;
-            var minY = float.MaxValue;
-            var maxY = float.MinValue;
             foreach (var vertex in vertices)
             {
                 minX = Mathf.Min(minX, vertex.x);
                 maxX = Mathf.Max(maxX, vertex.x);
-                minY = Mathf.Min(minY, vertex.y);
-                maxY = Mathf.Max(maxY, vertex.y);
             }
             var width = maxX - minX;
-            var height = maxY - minY;
-            if (width <= 1e-5f || height <= 1e-5f)
-                return opticalCenter;
+            if (width <= 1e-5f)
+                return;
 
-            // NDC across the whole screen: the left eye owns -1..0, the right eye 0..1.
-            var left = eye == Eye.Left ? -1f : 0f;
-            var right = eye == Eye.Left ? 0f : 1f;
-            // Cover rather than fit: the larger of the two ratios fills the half and crops the rest,
-            // so nothing is stretched out of shape.
-            var scale = Mathf.Max((right - left) / width, 2f / height);
-            var centerX = (minX + maxX) * 0.5f;
-            var centerY = (minY + maxY) * 0.5f;
-            var targetX = (left + right) * 0.5f;
-            // The same move applied to the optical axis, worked out before the loop below.
-            var mapped = new Vector2(
-                targetX + (opticalCenter.x - centerX) * scale,
-                (opticalCenter.y - centerY) * scale);
+            // One scale for both directions, so the picture keeps its proportions.
+            var scale = windowWidth / width;
             for (var i = 0; i < vertices.Length; i++)
             {
                 var vertex = vertices[i];
-                vertex.x = targetX + (vertex.x - centerX) * scale;
-                vertex.y = (vertex.y - centerY) * scale;
+                vertex.x = axis.x + (vertex.x - axis.x) * scale;
+                vertex.y = axis.y + (vertex.y - axis.y) * scale;
                 vertices[i] = vertex;
             }
             mesh.vertices = vertices;
             mesh.RecalculateBounds();
-            return mapped;
         }
 
         // A solid line through the same shader, drawn after the eye images so it covers their edges.
