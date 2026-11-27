@@ -27,6 +27,19 @@ namespace CardboardXR.UI
 
         public const float k_DividerHeight = 40f;
 
+        // How far from the toolbar's middle the items sit, in dp. The settings panel raises them when
+        // it grows a row underneath, so the row above stays where it was on screen: it's taller, so
+        // its middle moves down, and the items move up by as much.
+        public float ItemY
+        {
+            get => m_ItemY;
+            set
+            {
+                m_ItemY = value;
+                Layout();
+            }
+        }
+
         public void Initialize(RectTransform[] items, int[] groups, Image[] dividers, RectTransform[] fullWidth, float itemWidth,
             float padding, float itemY)
         {
