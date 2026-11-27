@@ -7,9 +7,10 @@ using UnityEngine;
 
 namespace CardboardXR.Interaction
 {
-    // The picture-size row on the app's settings panel: - 100% +, setting how big the passthrough
-    // camera image is drawn in each eye. 100% is the fill the image has always had; 60% shrinks it,
-    // showing the black around it; 200% enlarges it and crops the edges further.
+    // The picture-size row on the app's settings panel: - 100% +, setting how big the picture is on
+    // each eye. 100% fills the eye's half of the screen as it always has; 60% shrinks the whole
+    // window, lens outline and picture together, leaving black around it; 200% can't grow the window
+    // past its half without crossing into the other eye, so it enlarges the picture inside.
     //   The row is built at runtime, so Core.unity stays untouched. The panel grows one row taller
     // (100 -> 180 dp) and its middle therefore moves down: 2.7 degrees at the panel's distance. The
     // toolbar's items move up inside it by 38 dp, 3.0 degrees, so that row stays where it was on

@@ -117,19 +117,33 @@ namespace CardboardXR.Stereo
             set => m_Zoom = Mathf.Max(0f, value);
         }
 
-        // How big the image is drawn against the fill, 0.6 to 2 in steps of 0.1: 1 leaves it covering
-        // the eye exactly as it always did, below that it shrinks and the room's black shows around
-        // it, above it is enlarged and cropped further. The settings panel writes this and nothing
-        // else, so Zoom above keeps its meaning of 0, and 100% here keeps meaning the fill.
+        // How big the picture is on each eye, 0.6 to 2 in steps of 0.1: 1 fills the eye's half of the
+        // screen exactly as it always did, below that the window shrinks and black shows around it,
+        // above that the window is already as large as its half allows and the picture inside is
+        // enlarged instead. The settings panel writes this and nothing else, so Zoom above keeps its
+        // meaning of 0, and 100% here keeps meaning the fill.
         public float Scale
         {
             get => m_Scale;
-            set => m_Scale = Mathf.Clamp(Mathf.Round(value * 10f) / 10f, k_MinScale, k_MaxScale);
+            set
+            {
+                m_Scale = Mathf.Clamp(Mathf.Round(value * 10f) / 10f, k_MinScale, k_MaxScale);
+                ApplyScale();
+            }
         }
 
-        // The enlargement that covers an eye, cropping what falls outside: the one set through Zoom,
-        // or the one worked out from the camera's view and the eye's.
-        float FillZoom()
+        // The window only shrinks while there's a picture to see: with passthrough off the scene keeps
+        // the whole of each eye's half, or the app's own panels would sit in a small box.
+        void ApplyScale()
+        {
+            if (m_Rig != null)
+                m_Rig.SetWindowScale(m_On ? m_Scale : 1f);
+        }
+
+        // The enlargement actually drawn: the set one, or the one that covers an eye, cropping the
+        // edges. The camera sees less than a Cardboard eye, so at its own size the image is a window
+        // with a border of nothing around it; filling the eye is what removes the border.
+        float ShownZoom()
         {
             if (m_Zoom > 0.01f)
                 return m_Zoom;
@@ -140,9 +154,6 @@ namespace CardboardXR.Stereo
                 return 1f;
             return Mathf.Clamp(Mathf.Max(eye.x / m_FrustumSize.x, eye.y / m_FrustumSize.y), 1f, 4f);
         }
-
-        // What is actually drawn: that fill, sized by the settings panel's setting.
-        float ShownZoom() => FillZoom() * m_Scale;
 
         void Awake()
         {
@@ -205,6 +216,7 @@ namespace CardboardXR.Stereo
             m_Fusion.EyesAtCamera = on;
             if (m_Rig != null)
                 m_Rig.MonoEyes = on && !m_StereoEyes;
+            ApplyScale();
             // Shown once the first image has arrived.
             m_Screen.enabled = on && m_HasImage;
             VirtualEnvironment.SetAllHidden(on);

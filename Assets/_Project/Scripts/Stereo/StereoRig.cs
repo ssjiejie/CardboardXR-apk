@@ -61,6 +61,16 @@ namespace CardboardXR.Stereo
         Texture2D m_MarkerTexture;
         GameObject m_Compositor;
         LensDistortion m_Lens;
+        // How much of its half of the screen each eye's picture takes: 1 fills it edge to edge, as it
+        // always has, and 0.6 leaves black around a smaller picture. Above 1 the window is already as
+        // big as its half allows — the two would meet and cross in the middle — so the picture inside
+        // it is enlarged instead, cropping its edges. Set from the settings panel.
+        float m_WindowScale = 1f;
+        // The meshes as they were built, and where each sits on the screen. Every scale is worked out
+        // from these, so stepping up and down never accumulates rounding, and 1 puts them back as is.
+        Vector3[][] m_BaseVertices;
+        Vector2[][] m_BaseUvs;
+        Vector2[] m_WindowCenters;
 
         // Whether the scene is drawn once to the whole screen, instead of once per eye through the
         // viewer's lenses.
@@ -82,6 +92,76 @@ namespace CardboardXR.Stereo
                 halfHeight = Mathf.Max(halfHeight, Mathf.Max(Mathf.Tan(fov.z), Mathf.Tan(fov.w)));
             }
             return new Vector2(2f * halfWidth, 2f * halfHeight);
+        }
+
+        // How much of its half of the screen each eye's picture takes. Below 1 the whole window — the
+        // lens outline and the picture in it — shrinks toward the middle of that half, and black shows
+        // around it. Above 1 there's nowhere for the window to grow to, so the picture inside the
+        // full-size window is enlarged instead. The lens coefficients, eye offsets and frustums are
+        // never touched; only where the meshes' vertices land on the screen.
+        public void SetWindowScale(float scale)
+        {
+            m_WindowScale = Mathf.Clamp(Mathf.Round(scale * 10f) / 10f, 0.6f, 2f);
+            ApplyWindowScale();
+        }
+
+        // Rebuilds the meshes from the copies kept when they were built. At 1 the copies go back
+        // untouched, so the picture is the one the app has always drawn.
+        void ApplyWindowScale()
+        {
+            if (m_BaseVertices == null || m_WindowCenters == null)
+                return;
+            var window = Mathf.Min(m_WindowScale, 1f);
+            var content = Mathf.Max(m_WindowScale, 1f);
+            var unchanged = m_WindowScale == 1f;
+            for (var i = 0; i < m_Meshes.Length; i++)
+            {
+                var mesh = m_Meshes[i];
+                var baseVertices = m_BaseVertices[i];
+                var baseUvs = m_BaseUvs[i];
+                if (mesh == null || baseVertices == null || baseUvs == null)
+                    continue;
+                var vertices = mesh.vertices;
+                var uvs = mesh.uv;
+                var center = m_WindowCenters[i];
+                for (var v = 0; v < baseVertices.Length; v++)
+                {
+                    if (unchanged)
+                    {
+                        vertices[v] = baseVertices[v];
+                        uvs[v] = baseUvs[v];
+                        continue;
+                    }
+                    vertices[v].x = center.x + (baseVertices[v].x - center.x) * window;
+                    vertices[v].y = center.y + (baseVertices[v].y - center.y) * window;
+                    uvs[v].x = 0.5f + (baseUvs[v].x - 0.5f) / content;
+                    uvs[v].y = 0.5f + (baseUvs[v].y - 0.5f) / content;
+                }
+                mesh.vertices = vertices;
+                mesh.uv = uvs;
+                mesh.RecalculateBounds();
+            }
+        }
+
+        // Keeps a mesh as built, and where it sits on the screen: the middle of its extent, which
+        // FillEye has already put in the middle of the eye's half. Scaling about any other point
+        // would slide the picture sideways as it shrinks, by a different amount in each eye.
+        void KeepAsBase(int index)
+        {
+            var mesh = m_Meshes[index];
+            if (mesh == null)
+                return;
+            var vertices = mesh.vertices;
+            m_BaseVertices[index] = vertices;
+            m_BaseUvs[index] = mesh.uv;
+            var min = vertices[0];
+            var max = vertices[0];
+            foreach (var vertex in vertices)
+            {
+                min = Vector3.Min(min, vertex);
+                max = Vector3.Max(max, vertex);
+            }
+            m_WindowCenters[index] = new Vector2((min.x + max.x) * 0.5f, (min.y + max.y) * 0.5f);
         }
 
         // Puts both eyes at one point, so nothing the eye cameras draw has any disparity. Passthrough
@@ -204,6 +284,8 @@ namespace CardboardXR.Stereo
             CreateEye(Eye.Right);
             PlaceEyes();
             CreateCompositor(screenSize);
+            // A rebuild makes new meshes; the picture size the user chose still applies to them.
+            ApplyWindowScale();
         }
 
         // The mono view: an ordinary perspective camera drawing straight to the screen, kept in
@@ -269,6 +351,9 @@ namespace CardboardXR.Stereo
 
         void CreateCompositor(Vector2 screenSize)
         {
+            m_BaseVertices = new Vector3[2][];
+            m_BaseUvs = new Vector2[2][];
+            m_WindowCenters = new Vector2[2];
             m_Compositor = new GameObject("Distortion Compositor") { layer = CompositorLayer };
             var compositorCamera = m_Compositor.AddComponent<Camera>();
             compositorCamera.stereoTargetEye = StereoTargetEyeMask.None;
@@ -288,6 +373,7 @@ namespace CardboardXR.Stereo
                 m_Meshes[i] = m_Lens.CreateDistortionMesh(eye);
                 if (m_FillEyes)
                     FillEye(m_Meshes[i], eye);
+                KeepAsBase(i);
                 m_Materials[i] = new Material(m_DistortionShader)
                 {
                     name = $"{eye} Distortion",
@@ -410,6 +496,9 @@ namespace CardboardXR.Stereo
             if (m_Compositor != null)
                 Destroy(m_Compositor);
             m_Compositor = null;
+            m_BaseVertices = null;
+            m_BaseUvs = null;
+            m_WindowCenters = null;
         }
     }
 }
