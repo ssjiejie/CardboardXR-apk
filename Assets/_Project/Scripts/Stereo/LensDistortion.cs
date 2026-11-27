@@ -54,6 +54,31 @@ namespace CardboardXR.Stereo
         // (left, right, bottom, top).
         public Vector4 GetFieldOfView(Eye eye) => m_FieldOfView[(int)eye];
 
+        // Where the eye's optical axis — straight ahead of its camera — meets the screen, in NDC
+        // across the whole screen (x,y in -1..1, y up). The lens sits that far out from the screen's
+        // middle, and the projection's principal point is there, so this is the one point a picture
+        // can be scaled about without the two eyes sliding apart.
+        public Vector2 GetOpticalCenterNdc(Eye eye)
+        {
+            CalculateViewports(eye, out var screen, out _);
+            return new Vector2(
+                2f * screen.xEyeOffset / screen.width - 1f,
+                2f * screen.yEyeOffset / screen.height - 1f);
+        }
+
+        // The optical axis on the eye texture, as UV. The two sides of the frustum are at different
+        // angles, so it isn't the texture's middle: enlarging the picture about the middle would
+        // slide it off the axis. This is the point that stays put.
+        public Vector2 GetOpticalCenterTextureUv(Eye eye)
+        {
+            var fov = m_FieldOfView[(int)eye];
+            var left = Mathf.Tan(fov.x);
+            var right = Mathf.Tan(fov.y);
+            var bottom = Mathf.Tan(fov.z);
+            var top = Mathf.Tan(fov.w);
+            return new Vector2(left / (left + right), bottom / (bottom + top));
+        }
+
         // Eye position in head space, in meters: half the lens separation to either side.
         public Vector3 GetEyeOffset(Eye eye) =>
             new((eye == Eye.Left ? -0.5f : 0.5f) * m_Viewer.interLensDistance, 0f, 0f);

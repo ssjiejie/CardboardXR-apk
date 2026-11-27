@@ -66,11 +66,13 @@ namespace CardboardXR.Stereo
         // big as its half allows — the two would meet and cross in the middle — so the picture inside
         // it is enlarged instead, cropping its edges. Set from the settings panel.
         float m_WindowScale = 1f;
-        // The meshes as they were built, and where each sits on the screen. Every scale is worked out
-        // from these, so stepping up and down never accumulates rounding, and 1 puts them back as is.
+        // The meshes as they were built, where each eye's optical axis sits on the screen once the
+        // fill has moved it, and where it sits on the eye texture. Every scale is worked out from
+        // these, so stepping up and down never accumulates rounding, and 1 puts them back as is.
         Vector3[][] m_BaseVertices;
         Vector2[][] m_BaseUvs;
         Vector2[] m_WindowCenters;
+        Vector2[] m_UvCenters;
 
         // Whether the scene is drawn once to the whole screen, instead of once per eye through the
         // viewer's lenses.
@@ -95,7 +97,7 @@ namespace CardboardXR.Stereo
         }
 
         // How much of its half of the screen each eye's picture takes. Below 1 the whole window — the
-        // lens outline and the picture in it — shrinks toward the middle of that half, and black shows
+        // lens outline and the picture in it — shrinks toward the eye's optical axis, and black shows
         // around it. Above 1 there's nowhere for the window to grow to, so the picture inside the
         // full-size window is enlarged instead. The lens coefficients, eye offsets and frustums are
         // never touched; only where the meshes' vertices land on the screen.
@@ -105,11 +107,12 @@ namespace CardboardXR.Stereo
             ApplyWindowScale();
         }
 
-        // Rebuilds the meshes from the copies kept when they were built. At 1 the copies go back
-        // untouched, so the picture is the one the app has always drawn.
+        // Rebuilds the meshes from the copies kept when they were built, about the point that has to
+        // stay put: each eye's optical axis. At 1 the copies go back untouched, so the picture is the
+        // one the app has always drawn.
         void ApplyWindowScale()
         {
-            if (m_BaseVertices == null || m_WindowCenters == null)
+            if (m_BaseVertices == null || m_WindowCenters == null || m_UvCenters == null)
                 return;
             var window = Mathf.Min(m_WindowScale, 1f);
             var content = Mathf.Max(m_WindowScale, 1f);
@@ -124,6 +127,7 @@ namespace CardboardXR.Stereo
                 var vertices = mesh.vertices;
                 var uvs = mesh.uv;
                 var center = m_WindowCenters[i];
+                var uvAxis = m_UvCenters[i];
                 for (var v = 0; v < baseVertices.Length; v++)
                 {
                     if (unchanged)
@@ -134,8 +138,8 @@ namespace CardboardXR.Stereo
                     }
                     vertices[v].x = center.x + (baseVertices[v].x - center.x) * window;
                     vertices[v].y = center.y + (baseVertices[v].y - center.y) * window;
-                    uvs[v].x = 0.5f + (baseUvs[v].x - 0.5f) / content;
-                    uvs[v].y = 0.5f + (baseUvs[v].y - 0.5f) / content;
+                    uvs[v].x = uvAxis.x + (baseUvs[v].x - uvAxis.x) / content;
+                    uvs[v].y = uvAxis.y + (baseUvs[v].y - uvAxis.y) / content;
                 }
                 mesh.vertices = vertices;
                 mesh.uv = uvs;
@@ -143,25 +147,19 @@ namespace CardboardXR.Stereo
             }
         }
 
-        // Keeps a mesh as built, and where it sits on the screen: the middle of its extent, which
-        // FillEye has already put in the middle of the eye's half. Scaling about any other point
-        // would slide the picture sideways as it shrinks, by a different amount in each eye.
-        void KeepAsBase(int index)
+        // Keeps a mesh as built, and the point it has to be scaled about: the eye's optical axis,
+        // carried through the same move the fill made. Scaling about the middle of the mesh instead
+        // slides the axis outwards as the picture shrinks, by a different amount in each eye, and the
+        // two eyes then no longer line up.
+        void KeepAsBase(int index, Eye eye, Vector2 windowCenter)
         {
             var mesh = m_Meshes[index];
             if (mesh == null)
                 return;
-            var vertices = mesh.vertices;
-            m_BaseVertices[index] = vertices;
+            m_BaseVertices[index] = mesh.vertices;
             m_BaseUvs[index] = mesh.uv;
-            var min = vertices[0];
-            var max = vertices[0];
-            foreach (var vertex in vertices)
-            {
-                min = Vector3.Min(min, vertex);
-                max = Vector3.Max(max, vertex);
-            }
-            m_WindowCenters[index] = new Vector2((min.x + max.x) * 0.5f, (min.y + max.y) * 0.5f);
+            m_WindowCenters[index] = windowCenter;
+            m_UvCenters[index] = m_Lens.GetOpticalCenterTextureUv(eye);
         }
 
         // Puts both eyes at one point, so nothing the eye cameras draw has any disparity. Passthrough
@@ -354,6 +352,7 @@ namespace CardboardXR.Stereo
             m_BaseVertices = new Vector3[2][];
             m_BaseUvs = new Vector2[2][];
             m_WindowCenters = new Vector2[2];
+            m_UvCenters = new Vector2[2];
             m_Compositor = new GameObject("Distortion Compositor") { layer = CompositorLayer };
             var compositorCamera = m_Compositor.AddComponent<Camera>();
             compositorCamera.stereoTargetEye = StereoTargetEyeMask.None;
@@ -371,9 +370,11 @@ namespace CardboardXR.Stereo
             {
                 var eye = (Eye)i;
                 m_Meshes[i] = m_Lens.CreateDistortionMesh(eye);
-                if (m_FillEyes)
-                    FillEye(m_Meshes[i], eye);
-                KeepAsBase(i);
+                // The point the picture will be scaled about, before and after the fill moves it.
+                var axis = m_Lens.GetOpticalCenterNdc(eye);
+                var windowCenter = m_FillEyes ? FillEye(m_Meshes[i], eye, axis) : axis;
+                KeepAsBase(i, eye, windowCenter);
+                Debug.Log($"[Zoom] {eye} axis NDC {axis} center {windowCenter} uv {m_UvCenters[i]}");
                 m_Materials[i] = new Material(m_DistortionShader)
                 {
                     name = $"{eye} Distortion",
@@ -391,8 +392,9 @@ namespace CardboardXR.Stereo
         // The mesh is laid out from the viewer's field of view and the phone's physical screen size,
         // and Android only reports a DPI for that, which many phones get wrong; a size that comes out
         // too small shrinks the picture to a patch in the middle. Filling the half makes it reach the
-        // edges whatever the phone claims to measure.
-        static void FillEye(Mesh mesh, Eye eye)
+        // edges whatever the phone claims to measure. Returns where the eye's optical axis ends up,
+        // since that is the point a later size change has to scale about.
+        static Vector2 FillEye(Mesh mesh, Eye eye, Vector2 opticalCenter)
         {
             var vertices = mesh.vertices;
             var minX = float.MaxValue;
@@ -409,7 +411,7 @@ namespace CardboardXR.Stereo
             var width = maxX - minX;
             var height = maxY - minY;
             if (width <= 1e-5f || height <= 1e-5f)
-                return;
+                return opticalCenter;
 
             // NDC across the whole screen: the left eye owns -1..0, the right eye 0..1.
             var left = eye == Eye.Left ? -1f : 0f;
@@ -420,6 +422,10 @@ namespace CardboardXR.Stereo
             var centerX = (minX + maxX) * 0.5f;
             var centerY = (minY + maxY) * 0.5f;
             var targetX = (left + right) * 0.5f;
+            // The same move applied to the optical axis, worked out before the loop below.
+            var mapped = new Vector2(
+                targetX + (opticalCenter.x - centerX) * scale,
+                (opticalCenter.y - centerY) * scale);
             for (var i = 0; i < vertices.Length; i++)
             {
                 var vertex = vertices[i];
@@ -429,6 +435,7 @@ namespace CardboardXR.Stereo
             }
             mesh.vertices = vertices;
             mesh.RecalculateBounds();
+            return mapped;
         }
 
         // A solid line through the same shader, drawn after the eye images so it covers their edges.
@@ -499,6 +506,7 @@ namespace CardboardXR.Stereo
             m_BaseVertices = null;
             m_BaseUvs = null;
             m_WindowCenters = null;
+            m_UvCenters = null;
         }
     }
 }
